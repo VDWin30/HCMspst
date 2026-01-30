@@ -213,32 +213,32 @@ export const gameData: GameData = {
   stage3: [
     {
       id: 'mem1',
-      imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+      imageUrl: 'https://nads.1cdn.vn/2024/06/28/W_than-thien-copyrs.jpg',
       title: 'Chân dung lịch sử 1'
     },
     {
       id: 'mem2',
-      imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=400&fit=crop',
+      imageUrl: 'https://vcdn1-giadinh.vnecdn.net/2016/03/29/Image-ExtractWord-2-Out-6620-1459219034.jpeg?w=1200&h=0&q=100&dpr=1&fit=crop&s=BtPfsZCAZZQDlIHFR9sNLw',
       title: 'Di tích 1'
     },
     {
       id: 'mem3',
-      imageUrl: 'https://images.unsplash.com/photo-1578502494516-d4e1e3fbadc7?w=400&h=400&fit=crop',
+      imageUrl: 'https://vcdn1-giadinh.vnecdn.net/2016/03/29/Image-942802835-ExtractWord-7-6460-7566-1459219025.png?w=680&h=0&q=100&dpr=2&fit=crop&s=7JeeTLl0YiwoZ8wi3TfuZw',
       title: 'Cách mạng 1'
     },
     {
       id: 'mem4',
-      imageUrl: 'https://images.unsplash.com/photo-1549887534-7e4dc4e4b3a0?w=400&h=400&fit=crop',
+      imageUrl: 'https://vcdn1-giadinh.vnecdn.net/2016/03/29/Image-322193178-ExtractWord-3-5762-8378-1459219022.png?w=680&h=0&q=100&dpr=2&fit=crop&s=rzDSxRtho3FQqKuMitCiXA',
       title: 'Chân dung lịch sử 2'
     },
     {
       id: 'mem5',
-      imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
+      imageUrl: 'https://vcdn1-giadinh.vnecdn.net/2016/03/29/Image-ExtractWord-6-Out-6941-1459219025.png?w=680&h=0&q=100&dpr=2&fit=crop&s=0j2O5JYduFp_nQOH4ODrTA',
       title: 'Di tích 2'
     },
     {
       id: 'mem6',
-      imageUrl: 'https://images.unsplash.com/photo-1519074069444-1ba904ff311f?w=400&h=400&fit=crop',
+      imageUrl: 'https://media-cdn-v2.laodong.vn/storage/newsportal/2024/8/22/1383302/Canhdep_Vietnam-1.jpg',
       title: 'Cách mạng 2'
     }
   ],
