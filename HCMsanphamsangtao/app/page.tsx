@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useGame } from '@/lib/game-context';
+import { GameProvider, useGame } from '@/lib/game-context';
+
 import { HomeScreen } from '@/components/HomeScreen';
 import { CompletionScreen } from '@/components/CompletionScreen';
 import { Stage1 } from '@/components/stages/Stage1';
@@ -12,6 +13,7 @@ import { Stage5 } from '@/components/stages/Stage5';
 
 function GameContent() {
   const { gameState, moveToStage, resetGame, getTotalScore } = useGame();
+
   const [gameScreen, setGameScreen] = useState<
     'home' | 'playing' | 'completed'
   >('home');
@@ -77,6 +79,7 @@ function GameContent() {
         {gameState.currentStage === 3 && <Stage3 />}
         {gameState.currentStage === 4 && <Stage4 />}
         {gameState.currentStage === 5 && <Stage5 />}
+
         {gameState.currentStage > 5 && (
           <CompletionScreen
             score={getTotalScore()}
@@ -91,5 +94,9 @@ function GameContent() {
 }
 
 export default function Page() {
-  return <GameContent />;
+  return (
+    <GameProvider>
+      <GameContent />
+    </GameProvider>
+  );
 }
