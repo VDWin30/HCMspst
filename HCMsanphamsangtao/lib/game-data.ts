@@ -68,145 +68,150 @@ export const gameData: GameData = {
   // Stage 2: Answer 10 random questions from 20+ questions in pool
   stage2: [
     {
-      id: 'q1',
-      question: 'Hồ Chí Minh sinh năm nào?',
-      options: ['1890', '1891', '1892', '1893'],
-      correct: 0,
-      explanation: 'Hồ Chí Minh sinh ngày 19 tháng 5 năm 1890'
-    },
-    {
-      id: 'q2',
-      question: 'Hồ Chí Minh thành lập Đảng Cộng sản Việt Nam vào năm nào?',
-      options: ['1925', '1930', '1935', '1940'],
-      correct: 1,
-      explanation: 'Đảng Cộng sản Việt Nam được thành lập vào 3 tháng 2 năm 1930'
-    },
-    {
-      id: 'q3',
-      question: 'Tư tưởng Hồ Chí Minh dựa trên nền tảng nào?',
-      options: ['Chủ nghĩa tư bản', 'Chủ nghĩa Mác - Lê Nin', 'Chủ nghĩa phát xít', 'Chủ nghĩa tự do'],
-      correct: 1,
-      explanation: 'Tư tưởng Hồ Chí Minh dựa trên nền tảng chủ nghĩa Mác - Lê Nin'
-    },
-    {
-      id: 'q4',
-      question: 'Cách mạng tháng 8 diễn ra vào năm nào?',
-      options: ['1943', '1944', '1945', '1946'],
-      correct: 2,
-      explanation: 'Cách mạng tháng 8 năm 1945 thành công, Việt Nam tuyên bố độc lập'
-    },
-    {
-      id: 'q5',
-      question: 'Hồ Chí Minh công bố Độc lập nước Việt Nam vào ngày mấy?',
-      options: ['1 tháng 9', '2 tháng 9', '15 tháng 8', '31 tháng 8'],
-      correct: 1,
-      explanation: 'Ngày 2 tháng 9 năm 1945, Hồ Chí Minh công bố Độc lập'
-    },
-    {
-      id: 'q6',
-      question: 'Hồ Chí Minh đề cao giá trị nào nhất?',
-      options: ['Tư lợi cá nhân', 'Độc lập và tự do', 'Tài nguyên thiên nhiên', 'Công nghệ'],
-      correct: 1,
-      explanation: 'Hồ Chí Minh luôn đề cao độc lập dân tộc và tự do'
-    },
-    {
-      id: 'q7',
-      question: 'Vai trò của nhân dân trong tư tưởng Hồ Chí Minh?',
-      options: ['Nhân dân là bộ máy chính phủ', 'Nhân dân là gốc của cách mạng', 'Nhân dân là quân đội', 'Nhân dân là các nhà khoa học'],
-      correct: 1,
-      explanation: 'Hồ Chí Minh coi nhân dân là gốc, là lực lượng chính của cách mạng'
-    },
-    {
-      id: 'q8',
-      question: 'Hồ Chí Minh mất vào năm nào?',
-      options: ['1967', '1969', '1970', '1972'],
-      correct: 2,
-      explanation: 'Hồ Chí Minh mất vào ngày 2 tháng 9 năm 1969'
-    },
-    {
-      id: 'q9',
-      question: 'Tư tưởng Hồ Chí Minh có đặc điểm gì?',
-      options: ['Quốc tế và dân tộc', 'Chỉ quốc tế', 'Chỉ dân tộc', 'Không liên quan'],
-      correct: 0,
-      explanation: 'Tư tưởng Hồ Chí Minh vừa có tính quốc tế vừa có tính dân tộc'
-    },
-    {
-      id: 'q10',
-      question: 'Hồ Chí Minh là người nước nào?',
-      options: ['Trung Quốc', 'Việt Nam', 'Lào', 'Campuchia'],
-      correct: 1,
-      explanation: 'Hồ Chí Minh là người Việt Nam, sinh tại Nghệ An'
-    },
-    {
-      id: 'q11',
-      question: 'Hồ Chí Minh sống ở nước ngoài được bao lâu?',
-      options: ['10 năm', '20 năm', '30 năm', '40 năm'],
-      correct: 2,
-      explanation: 'Hồ Chí Minh sống ở nước ngoài khoảng 30 năm để học tập và tìm đường cứu nước'
-    },
-    {
-      id: 'q12',
-      question: 'Chủ trương của Hồ Chí Minh về đoàn kết dân tộc là gì?',
-      options: ['Chỉ đoàn kết công nhân', 'Đoàn kết tất cả các tầng lớp nhân dân', 'Chỉ đoàn kết nông dân', 'Chỉ đoàn kết trí thức'],
-      correct: 1,
-      explanation: 'Hồ Chí Minh nhấn mạnh đoàn kết tất cả các tầng lớp nhân dân lao động'
-    },
-    {
-      id: 'q13',
-      question: 'Hồ Chí Minh gặp Lênin ở đâu?',
-      options: ['Pháp', 'Liên Xô', 'Trung Quốc', 'Nhật Bản'],
-      correct: 1,
-      explanation: 'Hồ Chí Minh gặp Lênin tại Liên Xô và được tiếp nhận vào Đảng Cộng sản'
-    },
-    {
-      id: 'q14',
-      question: 'Tên gốc của Hồ Chí Minh là gì?',
-      options: ['Nguyễn Sinh Cung', 'Tống Văn Tần', 'Bảo Thái', 'Lý Thị Tú'],
-      correct: 0,
-      explanation: 'Tên gốc của Hồ Chí Minh là Nguyễn Sinh Cung, sinh tại Kỳ Ngàn, Nghệ An'
-    },
-    {
-      id: 'q15',
-      question: 'Hồ Chí Minh đi học ở Pháp được bao lâu?',
-      options: ['1 năm', '3 năm', '5 năm', '7 năm'],
-      correct: 1,
-      explanation: 'Hồ Chí Minh sang Pháp vào năm 1911 và ở lại khoảng 5 năm'
-    },
-    {
-      id: 'q16',
-      question: 'Bộ Độc lập Tuyên ngôn của Hồ Chí Minh có ý nghĩa gì?',
-      options: ['Khai báo chiến tranh với Pháp', 'Công bố độc lập nước Việt Nam', 'Công bố thành lập Đảng', 'Công bố quốc huy'],
-      correct: 1,
-      explanation: 'Bộ Độc lập Tuyên ngôn công bố sự độc lập, tự do và chủ quyền của Việt Nam'
-    },
-    {
-      id: 'q17',
-      question: 'Hồ Chí Minh xem trọng điều gì nhất?',
-      options: ['Tiền bạc', 'Quyền lực', 'Độc lập tự do của dân tộc', 'Danh vọng cá nhân'],
-      correct: 2,
-      explanation: 'Hồ Chí Minh luôn xem trọng độc lập, tự do của dân tộc Việt Nam'
-    },
-    {
-      id: 'q18',
-      question: 'Chiến dịch nào là thắng lợi lớn nhất của Hồ Chí Minh?',
-      options: ['Chiến dịch Điện Biên Phủ', 'Cách mạng tháng 8', 'Chiến dịch Tây Bắc', 'Chiến dịch Hạ Long'],
-      correct: 0,
-      explanation: 'Chiến dịch Điện Biên Phủ (1954) là thắng lợi lớn nhất, buộc Pháp rút khỏi Việt Nam'
-    },
-    {
-      id: 'q19',
-      question: 'Tư tưởng Hồ Chí Minh về phụ nữ là gì?',
-      options: ['Phụ nữ nên ở nhà', 'Phụ nữ bằng quyền với đàn ông', 'Phụ nữ chỉ làm việc nhẹ', 'Phụ nữ không cần học hành'],
-      correct: 1,
-      explanation: 'Hồ Chí Minh nhấn mạnh phụ nữ có quyền bằng đàn ông trong cách mạng'
-    },
-    {
-      id: 'q20',
-      question: 'Hồ Chí Minh đặt nước nước lợi ích gì lên trên hết?',
-      options: ['Lợi ích cá nhân', 'Lợi ích giai cấp', 'Lợi ích dân tộc', 'Lợi ích quốc tế'],
-      correct: 2,
-      explanation: 'Hồ Chí Minh luôn đặt lợi ích dân tộc và nhân dân lên trên hết'
-    }
+    id: 'q1',
+    question: 'Nền tảng tư tưởng của Hồ Chí Minh là gì?',
+    options: ['Chủ nghĩa dân tộc', 'Chủ nghĩa Mác – Lênin', 'Chủ nghĩa tự do', 'Chủ nghĩa cải lương'],
+    correct: 1,
+    explanation: 'Tư tưởng Hồ Chí Minh lấy chủ nghĩa Mác – Lênin làm nền tảng'
+  },
+  {
+    id: 'q2',
+    question: 'Mục tiêu cao nhất của tư tưởng Hồ Chí Minh là gì?',
+    options: ['Phát triển kinh tế', 'Độc lập dân tộc gắn liền với CNXH', 'Hội nhập quốc tế', 'Mở rộng lãnh thổ'],
+    correct: 1,
+    explanation: 'Độc lập dân tộc phải gắn liền với CNXH'
+  },
+  {
+    id: 'q3',
+    question: 'Theo Hồ Chí Minh, ai là chủ thể của cách mạng?',
+    options: ['Đảng', 'Quân đội', 'Nhân dân', 'Trí thức'],
+    correct: 2,
+    explanation: 'Nhân dân là gốc của cách mạng'
+  },
+  {
+    id: 'q4',
+    question: 'Chiến lược lâu dài của cách mạng Việt Nam theo Hồ Chí Minh là gì?',
+    options: ['Đấu tranh vũ trang', 'Cải cách kinh tế', 'Đại đoàn kết toàn dân', 'Ngoại giao'],
+    correct: 2,
+    explanation: 'Đại đoàn kết toàn dân là chiến lược quyết định'
+  },
+  {
+    id: 'q5',
+    question: 'Nhà nước theo tư tưởng Hồ Chí Minh là gì?',
+    options: ['Nhà nước cai trị', 'Nhà nước quân sự', 'Nhà nước của dân, do dân, vì dân', 'Nhà nước giai cấp'],
+    correct: 2,
+    explanation: 'Nhà nước phục vụ nhân dân'
+  },
+  {
+    id: 'q6',
+    question: 'Theo Hồ Chí Minh, đạo đức cách mạng có vai trò gì?',
+    options: ['Không quan trọng', 'Phụ', 'Là gốc của người cách mạng', 'Chỉ cần với lãnh đạo'],
+    correct: 2,
+    explanation: 'Có đức mà không có tài thì làm việc gì cũng khó'
+  },
+  {
+    id: 'q7',
+    question: 'Hồ Chí Minh quan niệm thế nào về Đảng Cộng sản?',
+    options: ['Đảng đứng trên dân', 'Đảng chỉ lãnh đạo', 'Đảng vừa lãnh đạo vừa phục vụ nhân dân', 'Đảng là tổ chức quyền lực'],
+    correct: 2,
+    explanation: 'Đảng là đầy tớ trung thành của nhân dân'
+  },
+  {
+    id: 'q8',
+    question: 'Theo Hồ Chí Minh, cách mạng muốn thành công cần điều gì?',
+    options: ['Vũ khí mạnh', 'Nhân dân ủng hộ', 'Tiền bạc', 'Ngoại viện'],
+    correct: 1,
+    explanation: 'Dễ trăm lần không dân cũng chịu'
+  },
+  {
+    id: 'q9',
+    question: 'Tư tưởng Hồ Chí Minh về con người là gì?',
+    options: ['Công cụ sản xuất', 'Yếu tố phụ', 'Vừa là mục tiêu vừa là động lực', 'Phụ thuộc Nhà nước'],
+    correct: 2,
+    explanation: 'Con người là trung tâm của cách mạng'
+  },
+  {
+    id: 'q10',
+    question: 'Theo Hồ Chí Minh, độc lập có ý nghĩa gì?',
+    options: ['Danh nghĩa', 'Hình thức', 'Gắn với tự do, hạnh phúc của nhân dân', 'Chỉ chính trị'],
+    correct: 2,
+    explanation: 'Độc lập mà dân không hạnh phúc thì độc lập vô nghĩa'
+  },
+     {
+    id: 'q31',
+    question: 'Đảng Cộng sản Việt Nam được thành lập vào ngày nào?',
+    options: ['1/1/1930', '3/2/1930', '19/5/1930', '2/9/1930'],
+    correct: 1,
+    explanation: 'Đảng Cộng sản Việt Nam thành lập ngày 3/2/1930'
+  },
+  {
+    id: 'q32',
+    question: 'Ai là người sáng lập Đảng Cộng sản Việt Nam?',
+    options: ['Trường Chinh', 'Phạm Văn Đồng', 'Hồ Chí Minh', 'Võ Nguyên Giáp'],
+    correct: 2,
+    explanation: 'Hồ Chí Minh sáng lập và rèn luyện Đảng'
+  },
+  {
+    id: 'q33',
+    question: 'Mục tiêu của Đảng Cộng sản Việt Nam là gì?',
+    options: ['Phát triển kinh tế', 'Giành độc lập', 'Xây dựng CNXH và CNCS', 'Hội nhập quốc tế'],
+    correct: 2,
+    explanation: 'Mục tiêu lâu dài là CNXH và CNCS'
+  },
+  {
+    id: 'q34',
+    question: 'Đảng Cộng sản Việt Nam lấy chủ nghĩa gì làm nền tảng?',
+    options: ['Chủ nghĩa dân tộc', 'Chủ nghĩa Mác – Lênin', 'Chủ nghĩa tự do', 'Chủ nghĩa cải lương'],
+    correct: 1,
+    explanation: 'Đảng lấy chủ nghĩa Mác – Lênin và tư tưởng Hồ Chí Minh'
+  },
+  {
+    id: 'q35',
+    question: 'Vai trò lãnh đạo của Đảng thể hiện ở đâu?',
+    options: ['Quân đội', 'Nhà nước', 'Toàn xã hội', 'Kinh tế'],
+    correct: 2,
+    explanation: 'Đảng lãnh đạo toàn diện xã hội'
+  },
+     {
+    id: 'q46',
+    question: 'Quân đội Nhân dân Việt Nam được thành lập vào ngày nào?',
+    options: ['19/5/1944', '22/12/1944', '2/9/1945', '7/5/1954'],
+    correct: 1,
+    explanation: 'Quân đội Nhân dân Việt Nam thành lập ngày 22/12/1944'
+  },
+  {
+    id: 'q47',
+    question: 'Tên gọi đầu tiên của Quân đội Nhân dân Việt Nam là gì?',
+    options: [
+      'Quân giải phóng',
+      'Việt Nam Tuyên truyền Giải phóng quân',
+      'Vệ quốc đoàn',
+      'Quân đội nhân dân'
+    ],
+    correct: 1,
+    explanation: 'Tên ban đầu là Việt Nam Tuyên truyền Giải phóng quân'
+  },
+  {
+    id: 'q48',
+    question: 'Bản chất của Quân đội Nhân dân Việt Nam là gì?',
+    options: ['Quân đội nhà nước', 'Quân đội của Đảng', 'Quân đội của nhân dân', 'Quân đội đánh thuê'],
+    correct: 2,
+    explanation: 'Quân đội từ nhân dân mà ra, vì nhân dân mà chiến đấu'
+  },
+  {
+    id: 'q49',
+    question: 'Nhà nước Việt Nam Dân chủ Cộng hòa được thành lập vào ngày nào?',
+    options: ['19/8/1945', '2/9/1945', '3/2/1930', '7/5/1954'],
+    correct: 1,
+    explanation: 'Ngày 2/9/1945, nước Việt Nam Dân chủ Cộng hòa ra đời'
+  },
+  {
+    id: 'q50',
+    question: 'Mặt trận Việt Minh được thành lập vào năm nào?',
+    options: ['1930', '1935', '1941', '1945'],
+    correct: 2,
+    explanation: 'Việt Minh thành lập năm 1941'
+  }
   ],
 
   // Stage 3: Memory game - find matching images, randomly selected from data
