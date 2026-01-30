@@ -47,19 +47,19 @@ export const gameData: GameData = {
   stage1: [
     {
       id: 'puzzle1',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop',
+      image: 'https://printgo.vn/uploads/media/790919/hinh-anh-chan-dung-bac-ho-3_1620742202.jpg',
       title: 'Chân dung Lịch sử',
       description: 'Ghép tranh để hoàn thành bức chân dung'
     },
     {
       id: 'puzzle2',
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&h=500&fit=crop',
+      image: 'https://static.tuoitre.vn/tto/i/s626/2016/07/09/2ce4879d.jpg',
       title: 'Di tích lịch sử',
       description: 'Ghép tranh về di tích lịch sử Việt Nam'
     },
     {
       id: 'puzzle3',
-      image: 'https://images.unsplash.com/photo-1578502494516-d4e1e3fbadc7?w=500&h=500&fit=crop',
+      image: 'https://media.la34.com.vn/upload/image/202508/original/40cb63687e0f70fab7f5c35967def143.jpg',
       title: 'Cách mạng Việt Nam',
       description: 'Ghép tranh về cách mạng tháng 8 năm 1945'
     }
