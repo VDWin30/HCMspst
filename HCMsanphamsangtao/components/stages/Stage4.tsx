@@ -23,8 +23,8 @@ export function Stage4() {
   const [completed, setCompleted] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
-  const spawnRef = useRef<NodeJS.Timeout | null>(null);
+  const gameLoopRef = useRef<number | null>(null);
+  const spawnRef = useRef<number | null>(null);
   const keysRef = useRef<{ [key: string]: boolean }>({});
 
   const BASKET_WIDTH = 100;
@@ -34,12 +34,26 @@ export function Stage4() {
   const FALL_SPEED = 5;
   const REQUIRED_SCORE = 200;
 
+  // Xóa tất cả interval khi component unmount
+  useEffect(() => {
+    return () => {
+      if (gameLoopRef.current) clearInterval(gameLoopRef.current);
+      if (spawnRef.current) clearInterval(spawnRef.current);
+    };
+  }, []);
+
   // Smooth keyboard movement
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-      if (key === 'a' || key === 'arrowleft') keysRef.current['left'] = true;
-      if (key === 'd' || key === 'arrowright') keysRef.current['right'] = true;
+      if (key === 'a' || key === 'arrowleft') {
+        e.preventDefault();
+        keysRef.current['left'] = true;
+      }
+      if (key === 'd' || key === 'arrowright') {
+        e.preventDefault();
+        keysRef.current['right'] = true;
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -59,7 +73,7 @@ export function Stage4() {
 
   // Smooth basket movement loop
   useEffect(() => {
-    if (!gameStarted) return;
+    if (!gameStarted || completed) return;
 
     const moveLoop = setInterval(() => {
       setBasketX(prev => {
@@ -71,7 +85,7 @@ export function Stage4() {
     }, 30);
 
     return () => clearInterval(moveLoop);
-  }, [gameStarted]);
+  }, [gameStarted, completed]);
 
   // Game timer
   useEffect(() => {
@@ -80,9 +94,10 @@ export function Stage4() {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
+          clearInterval(timer);
           setGameStarted(false);
           if (score < REQUIRED_SCORE) {
-            setFailedAttempts(prev + 1);
+            setFailedAttempts(prev => prev + 1);
           } else {
             setCompleted(true);
           }
@@ -99,16 +114,18 @@ export function Stage4() {
   useEffect(() => {
     if (!gameStarted || completed) return;
 
-    spawnRef.current = setInterval(() => {
+    if (spawnRef.current) clearInterval(spawnRef.current);
+    
+    spawnRef.current = window.setInterval(() => {
       const randomIdeology = gameData.stage4[Math.floor(Math.random() * gameData.stage4.length)];
       const newItem: FallingItem = {
-        id: `item-${Date.now()}`,
+        id: `item-${Date.now()}-${Math.random()}`,
         label: randomIdeology.label,
         isCorrect: randomIdeology.isCorrect,
         x: Math.random() * (CONTAINER_WIDTH - ITEM_SIZE),
         y: -ITEM_SIZE
       };
-      setFallingItems(prev => [...prev, newItem]);
+      setFallingItems(prev => [...prev.slice(-20), newItem]); // Giới hạn số lượng item
     }, 600);
 
     return () => {
@@ -120,7 +137,9 @@ export function Stage4() {
   useEffect(() => {
     if (!gameStarted || completed) return;
 
-    gameLoopRef.current = setInterval(() => {
+    if (gameLoopRef.current) clearInterval(gameLoopRef.current);
+    
+    gameLoopRef.current = window.setInterval(() => {
       setFallingItems(prev => {
         const updated = prev.map(item => ({
           ...item,
@@ -135,17 +154,19 @@ export function Stage4() {
           const basketY = CONTAINER_HEIGHT - 80;
 
           // Check collision with basket
-          if (
+          const hasCollided = 
             item.y + ITEM_SIZE >= basketY &&
             item.y <= basketY + 60 &&
             itemCenterX >= basketLeft &&
-            itemCenterX <= basketRight
-          ) {
+            itemCenterX <= basketRight;
+
+          if (hasCollided) {
             if (item.isCorrect) {
               setScore(s => s + 10);
             } else {
               setScore(s => Math.max(0, s - 5));
             }
+            // Không thêm item vào remaining nữa vì đã bắt được
           } else if (item.y < CONTAINER_HEIGHT) {
             remaining.push(item);
           }
@@ -160,25 +181,50 @@ export function Stage4() {
     };
   }, [gameStarted, basketX, completed]);
 
-  // Sync score to context when completed
+  // Kiểm tra điều kiện thắng/thua
   useEffect(() => {
-    if (completed && score >= REQUIRED_SCORE) {
+    if (!gameStarted || completed) return;
+
+    if (score >= REQUIRED_SCORE) {
+      setCompleted(true);
+      setGameStarted(false);
       addStage4Score(score);
     }
-  }, [completed, score]);
+  }, [score, gameStarted, completed, addStage4Score]);
+
+  // Kiểm tra thời gian hết
+  useEffect(() => {
+    if (timeLeft === 0 && gameStarted && score < REQUIRED_SCORE) {
+      setGameStarted(false);
+      setCompleted(false);
+      setFailedAttempts(prev => prev + 1);
+    }
+  }, [timeLeft, gameStarted, score]);
 
   const handleStart = () => {
     setGameStarted(true);
+    setCompleted(false);
     setTimeLeft(30);
     setScore(0);
     setFallingItems([]);
+    // Reset keys
+    keysRef.current = {};
   };
 
   const handleRetry = () => {
     setGameStarted(true);
+    setCompleted(false);
     setTimeLeft(30);
     setScore(0);
     setFallingItems([]);
+    keysRef.current = {};
+  };
+
+  const handleContinue = () => {
+    if (score >= REQUIRED_SCORE) {
+      addStage4Score(score);
+      moveToStage(5);
+    }
   };
 
   if (completed && score >= REQUIRED_SCORE) {
@@ -187,7 +233,10 @@ export function Stage4() {
         <div className="text-center p-8 bg-green-500/20 rounded-xl border-2 border-green-400 backdrop-blur">
           <h3 className="text-3xl font-bold text-green-400 mb-2">Tuyệt vời!</h3>
           <p className="text-white/80 mb-4">Bạn đã hứng được {score} điểm</p>
-          <Button onClick={() => moveToStage(5)} className="bg-green-500 hover:bg-green-600 text-white font-bold">
+          <Button 
+            onClick={handleContinue}
+            className="bg-green-500 hover:bg-green-600 text-white font-bold"
+          >
             Tiếp tục giai đoạn 5 →
           </Button>
         </div>
@@ -215,7 +264,7 @@ export function Stage4() {
               onClick={handleStart}
               className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 text-lg"
             >
-              Bắt đầu
+              {failedAttempts > 0 ? 'Chơi lại' : 'Bắt đầu'}
             </Button>
           </div>
         </div>
@@ -250,7 +299,7 @@ export function Stage4() {
             {fallingItems.map(item => (
               <div
                 key={item.id}
-                className={`absolute rounded-lg font-bold text-center transition-all flex items-center justify-center text-sm leading-tight`}
+                className={`absolute rounded-lg font-bold text-center flex items-center justify-center text-sm leading-tight`}
                 style={{
                   left: `${item.x}px`,
                   top: `${item.y}px`,
@@ -277,7 +326,8 @@ export function Stage4() {
                 height: '60px',
                 backgroundColor: '#f59e0b',
                 boxShadow: '0 0 20px #f59e0b',
-                border: '3px solid #fbbf24'
+                border: '3px solid #fbbf24',
+                transition: 'left 0.05s linear'
               }}
             >
               <span className="text-white font-bold text-xl">🧺</span>
@@ -290,7 +340,7 @@ export function Stage4() {
           </div>
 
           {/* Failure message */}
-          {completed && score < REQUIRED_SCORE && (
+          {!gameStarted && timeLeft === 0 && score < REQUIRED_SCORE && (
             <div className="text-center p-6 bg-red-500/20 rounded-lg border-2 border-red-400 backdrop-blur">
               <p className="text-white/80 mb-4">
                 Bạn chỉ có <span className="font-bold text-yellow-400">{score}</span>/{REQUIRED_SCORE} điểm. Cần <span className="text-red-400 font-bold">{REQUIRED_SCORE - score}</span> điểm nữa!
