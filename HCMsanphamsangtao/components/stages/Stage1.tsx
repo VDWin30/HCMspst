@@ -14,7 +14,7 @@ interface Piece {
 const PIECE_SIZE = 80;
 
 const LEVELS = [
-  { pieces: 6, cols: 3, rows: 2, rate: 5 },
+  { pieces: 6, cols: 3, rows: 2, rate: 5 },        // 5%
   { pieces: 8, cols: 4, rows: 2, rate: 23.75 },
   { pieces: 12, cols: 4, rows: 3, rate: 23.75 },
   { pieces: 14, cols: 7, rows: 2, rate: 23.75 },
@@ -31,7 +31,7 @@ const pickLevel = () => {
 };
 
 export function Stage1() {
-  const { moveToStage, setSolvedPuzzle, addScore } = useGame();
+  const { moveToStage, completeStage1 } = useGame();
 
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [placed, setPlaced] = useState<Set<string>>(new Set());
@@ -87,15 +87,16 @@ export function Stage1() {
         if (next.size === pieces.length) {
           setTimeout(() => {
             setCompleted(true);
-            addScore(100); // 🎯 +100 ĐIỂM
-            setSolvedPuzzle();
+            completeStage1(); // ✅ +100 điểm (chuẩn GameContext)
           }, 300);
         }
+
         return next;
       });
     }
   };
 
+  /* ===== DONE SCREEN ===== */
   if (completed) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -104,7 +105,8 @@ export function Stage1() {
             Hoàn thành!
           </h2>
           <p className="text-white/80 mb-4">
-            Bạn nhận được <span className="text-yellow-300 font-bold">+100 điểm</span>
+            Bạn nhận được{' '}
+            <span className="text-yellow-300 font-bold">+100 điểm</span>
           </p>
           <Button
             onClick={() => moveToStage(2)}
