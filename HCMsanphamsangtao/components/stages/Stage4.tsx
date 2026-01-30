@@ -15,436 +15,240 @@ interface FallingItem {
 
 export function Stage4() {
   const { moveToStage, addStage4Score } = useGame();
-  const [gameStarted, setGameStarted] = useState(false);
+
+  const [gameStatus, setGameStatus] =
+    useState<'idle' | 'playing' | 'finished' | 'failed'>('idle');
+
   const [timeLeft, setTimeLeft] = useState(30);
   const [score, setScore] = useState(0);
-  const [basketX, setBasketX] = useState(175);
+  const [basketX, setBasketX] = useState(200);
   const [fallingItems, setFallingItems] = useState<FallingItem[]>([]);
-  const [completed, setCompleted] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
-  const [gameStatus, setGameStatus] = useState<'idle' | 'playing' | 'finished' | 'failed'>('idle');
-  const containerRef = useRef<HTMLDivElement>(null);
+
+  const savedScoreRef = useRef(false);
+  const keysRef = useRef<{ left?: boolean; right?: boolean }>({});
   const gameLoopRef = useRef<number | null>(null);
   const spawnRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
-  const keysRef = useRef<{ [key: string]: boolean }>({});
 
+  const CONTAINER_WIDTH = 480;
+  const CONTAINER_HEIGHT = 420;
   const BASKET_WIDTH = 100;
-  const CONTAINER_HEIGHT = 600;
-  const CONTAINER_WIDTH = 500;
   const ITEM_SIZE = 70;
-  const FALL_SPEED = 5;
+  const FALL_SPEED = 4;
   const REQUIRED_SCORE = 200;
   const INITIAL_TIME = 30;
 
-  // Cleanup khi component unmount
-  useEffect(() => {
-    return () => {
-      cleanupAllIntervals();
-    };
-  }, []);
-
-  const cleanupAllIntervals = () => {
-    if (gameLoopRef.current) {
-      window.clearInterval(gameLoopRef.current);
-      gameLoopRef.current = null;
-    }
-    if (spawnRef.current) {
-      window.clearInterval(spawnRef.current);
-      spawnRef.current = null;
-    }
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+  const cleanup = () => {
+    [gameLoopRef, spawnRef, timerRef].forEach(ref => {
+      if (ref.current) {
+        clearInterval(ref.current);
+        ref.current = null;
+      }
+    });
     keysRef.current = {};
   };
 
-  // Keyboard controls
+  useEffect(() => cleanup, []);
+
+  // Keyboard
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const down = (e: KeyboardEvent) => {
       if (gameStatus !== 'playing') return;
-      
-      const key = e.key.toLowerCase();
-      if (key === 'a' || key === 'arrowleft') {
-        e.preventDefault();
-        keysRef.current['left'] = true;
-      }
-      if (key === 'd' || key === 'arrowright') {
-        e.preventDefault();
-        keysRef.current['right'] = true;
-      }
+      if (e.key === 'a' || e.key === 'ArrowLeft') keysRef.current.left = true;
+      if (e.key === 'd' || e.key === 'ArrowRight') keysRef.current.right = true;
     };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      if (key === 'a' || key === 'arrowleft') keysRef.current['left'] = false;
-      if (key === 'd' || key === 'arrowright') keysRef.current['right'] = false;
+    const up = (e: KeyboardEvent) => {
+      if (e.key === 'a' || e.key === 'ArrowLeft') keysRef.current.left = false;
+      if (e.key === 'd' || e.key === 'ArrowRight') keysRef.current.right = false;
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
     };
   }, [gameStatus]);
 
-  // Basket movement
+  // Basket move
   useEffect(() => {
     if (gameStatus !== 'playing') return;
-
-    const moveLoop = window.setInterval(() => {
-      setBasketX(prev => {
-        let newX = prev;
-        if (keysRef.current['left']) newX = Math.max(0, prev - 15);
-        if (keysRef.current['right']) newX = Math.min(CONTAINER_WIDTH - BASKET_WIDTH, prev + 15);
-        return newX;
+    const id = setInterval(() => {
+      setBasketX(x => {
+        if (keysRef.current.left) return Math.max(0, x - 14);
+        if (keysRef.current.right)
+          return Math.min(CONTAINER_WIDTH - BASKET_WIDTH, x + 14);
+        return x;
       });
     }, 30);
-
-    return () => window.clearInterval(moveLoop);
+    return () => clearInterval(id);
   }, [gameStatus]);
 
-  // Game timer
+  // Timer (QUYẾT ĐỊNH THẮNG / THUA)
   useEffect(() => {
     if (gameStatus !== 'playing') return;
 
-    // Clear existing timer
-    if (timerRef.current) window.clearInterval(timerRef.current);
-
-    timerRef.current = window.setInterval(() => {
-      setTimeLeft(prev => {
-        const newTime = prev - 1;
-        
-        if (newTime <= 0) {
-          // Time's up
-          if (timerRef.current) {
-            window.clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          
+    timerRef.current = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) {
+          cleanup();
           if (score >= REQUIRED_SCORE) {
             setGameStatus('finished');
-            setCompleted(true);
           } else {
+            setFailedAttempts(v => v + 1);
             setGameStatus('failed');
-            setFailedAttempts(prev => prev + 1);
           }
           return 0;
         }
-        return newTime;
+        return t - 1;
       });
     }, 1000);
 
-    return () => {
-      if (timerRef.current) {
-        window.clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
+    return () => cleanup();
   }, [gameStatus, score]);
 
-  // Spawn falling items
+  // Spawn item
   useEffect(() => {
     if (gameStatus !== 'playing') return;
 
-    if (spawnRef.current) window.clearInterval(spawnRef.current);
-    
-    spawnRef.current = window.setInterval(() => {
-      if (gameData.stage4 && gameData.stage4.length > 0) {
-        const randomIdeology = gameData.stage4[Math.floor(Math.random() * gameData.stage4.length)];
-        const newItem: FallingItem = {
-          id: `item-${Date.now()}-${Math.random()}`,
-          label: randomIdeology.label,
-          isCorrect: randomIdeology.isCorrect,
+    spawnRef.current = setInterval(() => {
+      const data = gameData.stage4;
+      const r = data[Math.floor(Math.random() * data.length)];
+      setFallingItems(items => [
+        ...items.slice(-12),
+        {
+          id: crypto.randomUUID(),
+          label: r.label,
+          isCorrect: r.isCorrect,
           x: Math.random() * (CONTAINER_WIDTH - ITEM_SIZE),
           y: -ITEM_SIZE
-        };
-        setFallingItems(prev => [...prev.slice(-15), newItem]);
-      }
+        }
+      ]);
     }, 600);
 
-    return () => {
-      if (spawnRef.current) {
-        window.clearInterval(spawnRef.current);
-        spawnRef.current = null;
-      }
-    };
+    return () => cleanup();
   }, [gameStatus]);
 
-  // Game loop - movement and collision
+  // Game loop
   useEffect(() => {
     if (gameStatus !== 'playing') return;
 
-    if (gameLoopRef.current) window.clearInterval(gameLoopRef.current);
-    
-    gameLoopRef.current = window.setInterval(() => {
-      setFallingItems(prev => {
-        const updated = prev.map(item => ({
-          ...item,
-          y: item.y + FALL_SPEED
-        }));
+    gameLoopRef.current = setInterval(() => {
+      setFallingItems(items =>
+        items
+          .map(i => ({ ...i, y: i.y + FALL_SPEED }))
+          .filter(item => {
+            const hit =
+              item.y + ITEM_SIZE >= CONTAINER_HEIGHT - 70 &&
+              item.x + ITEM_SIZE / 2 >= basketX &&
+              item.x + ITEM_SIZE / 2 <= basketX + BASKET_WIDTH;
 
-        const remaining: FallingItem[] = [];
-        updated.forEach(item => {
-          const itemCenterX = item.x + ITEM_SIZE / 2;
-          const basketLeft = basketX;
-          const basketRight = basketX + BASKET_WIDTH;
-          const basketY = CONTAINER_HEIGHT - 80;
-
-          // Check collision with basket
-          const hasCollided = 
-            item.y + ITEM_SIZE >= basketY &&
-            item.y <= basketY + 60 &&
-            itemCenterX >= basketLeft &&
-            itemCenterX <= basketRight;
-
-          if (hasCollided) {
-            if (item.isCorrect) {
-              setScore(s => s + 10);
-            } else {
-              setScore(s => Math.max(0, s - 5));
+            if (hit) {
+              setScore(s => (item.isCorrect ? s + 10 : Math.max(0, s - 5)));
+              return false;
             }
-          } else if (item.y < CONTAINER_HEIGHT) {
-            remaining.push(item);
-          }
-        });
-
-        return remaining;
-      });
+            return item.y < CONTAINER_HEIGHT;
+          })
+      );
     }, 40);
 
-    return () => {
-      if (gameLoopRef.current) {
-        window.clearInterval(gameLoopRef.current);
-        gameLoopRef.current = null;
-      }
-    };
+    return () => cleanup();
   }, [gameStatus, basketX]);
 
-  // Check win condition during gameplay
+  // Save score ONCE
   useEffect(() => {
-    if (gameStatus === 'playing' && score >= REQUIRED_SCORE) {
-      setGameStatus('finished');
-      setCompleted(true);
-      cleanupAllIntervals();
-    }
-  }, [score, gameStatus]);
-
-  // Handle completion
-  useEffect(() => {
-    if (gameStatus === 'finished' && score >= REQUIRED_SCORE) {
+    if (gameStatus === 'finished' && !savedScoreRef.current) {
       addStage4Score(score);
+      savedScoreRef.current = true;
     }
   }, [gameStatus, score, addStage4Score]);
 
-  const handleStart = () => {
-    // Clean up everything
-    cleanupAllIntervals();
-    
-    // Reset all states
-    setGameStatus('playing');
-    setGameStarted(true);
-    setCompleted(false);
-    setTimeLeft(INITIAL_TIME);
+  const start = () => {
+    cleanup();
+    savedScoreRef.current = false;
     setScore(0);
+    setTimeLeft(INITIAL_TIME);
+    setBasketX(200);
     setFallingItems([]);
-    setBasketX(175);
-    keysRef.current = {};
+    setGameStatus('playing');
   };
 
-  const handleRetry = () => {
-    handleStart();
-  };
+  /* ================= UI ================= */
 
-  const handleContinue = () => {
-    if (score >= REQUIRED_SCORE) {
-      moveToStage(5);
-    }
-  };
+  if (gameStatus === 'idle' || gameStatus === 'failed') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-black/50 border border-yellow-400/40 rounded-xl p-6 w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Giai đoạn 4: Hứng Ý Tưởng
+          </h2>
+          <p className="text-white/70 mb-4">
+            Đạt {REQUIRED_SCORE} điểm trong {INITIAL_TIME}s
+          </p>
+          {gameStatus === 'failed' && (
+            <p className="text-red-400 mb-3">
+              Thử {failedAttempts} lần – đạt {score} điểm
+            </p>
+          )}
+          <Button onClick={start} className="w-full text-lg py-3">
+            {failedAttempts ? 'CHƠI LẠI' : 'BẮT ĐẦU'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-  // Completion screen
   if (gameStatus === 'finished') {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center p-8 bg-green-500/20 rounded-xl border-2 border-green-400 backdrop-blur max-w-md w-full">
-          <h3 className="text-3xl font-bold text-green-400 mb-2">Tuyệt vời!</h3>
-          <p className="text-white/80 mb-6">Bạn đã hứng được {score} điểm</p>
-          <Button 
-            onClick={handleContinue}
-            className="bg-green-500 hover:bg-green-600 text-white font-bold w-full py-3 text-lg"
-          >
-            Tiếp tục giai đoạn 5 →
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-green-500/20 border border-green-400 rounded-xl p-6 w-full max-w-md text-center">
+          <h2 className="text-3xl text-green-400 font-bold mb-2">HOÀN THÀNH!</h2>
+          <p className="text-white mb-6">Bạn đạt {score} điểm</p>
+          <Button onClick={() => moveToStage(5)} className="w-full py-3">
+            Sang giai đoạn 5 →
           </Button>
         </div>
       </div>
     );
   }
 
-  // Failure screen
-  if (gameStatus === 'failed') {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center p-8 bg-red-500/20 rounded-xl border-2 border-red-400 backdrop-blur max-w-md w-full">
-          <h3 className="text-2xl font-bold text-red-400 mb-2">Chưa đạt yêu cầu!</h3>
-          <p className="text-white/80 mb-4">
-            Bạn có <span className="font-bold text-yellow-400">{score}</span>/{REQUIRED_SCORE} điểm
-          </p>
-          <p className="text-white/60 text-sm mb-6">
-            Đã thử: {failedAttempts} lần
-          </p>
-          <Button
-            onClick={handleRetry}
-            className="bg-yellow-400 hover:bg-yellow-500 text-red-700 font-bold w-full py-3 text-lg"
-          >
-            Chơi lại
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Start screen (idle state)
-  if (gameStatus === 'idle') {
-    return (
-      <div className="flex flex-col gap-6 p-6 h-full">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-1">Giai đoạn 4: Hứng Ý Tưởng</h2>
-          <p className="text-white/70 text-sm">Hứng các ý tưởng xanh (đúng), tránh các ý tưởng đỏ (sai)</p>
-          <p className="text-yellow-300 text-sm mt-1">Sử dụng phím A và D để di chuyển giỏ</p>
-        </div>
-
-        <div className="flex flex-col items-center justify-center flex-1 gap-6">
-          <div className="text-center p-8 bg-black/40 rounded-lg border border-white/10 max-w-md w-full">
-            <div className="mb-6">
-              <p className="text-white/80 text-lg mb-2">
-                Cần đạt <span className="text-yellow-300 font-bold text-2xl">{REQUIRED_SCORE} điểm</span>
-              </p>
-              <p className="text-white/60 text-sm">Thời gian: {INITIAL_TIME} giây</p>
-            </div>
-            
-            {failedAttempts > 0 && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <p className="text-red-300">Đã thử: {failedAttempts} lần</p>
-                <p className="text-white/70 text-sm">Điểm cao nhất: {Math.max(score, 0)}</p>
-              </div>
-            )}
-            
-            <Button
-              onClick={handleStart}
-              className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 text-lg w-full"
-            >
-              {failedAttempts > 0 ? 'CHƠI LẠI' : 'BẮT ĐẦU'}
-            </Button>
-            
-            <div className="mt-6 text-xs text-white/50 space-y-1">
-              <p>• Ý tưởng xanh (đúng): +10 điểm</p>
-              <p>• Ý tưởng đỏ (sai): -5 điểm</p>
-              <p>• Di chuyển giỏ bằng phím A (trái) và D (phải)</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Playing screen
   return (
-    <div className="flex flex-col gap-6 p-6 h-full">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-1">Giai đoạn 4: Hứng Ý Tưởng</h2>
-        <p className="text-white/70 text-sm">Hứng các ý tưởng xanh (đúng), tránh các ý tưởng đỏ (sai)</p>
-        <p className="text-yellow-300 text-sm mt-1">Sử dụng phím A và D để di chuyển giỏ</p>
-      </div>
-
-      {/* Stats */}
-      <div className="flex justify-between gap-3 text-center">
-        <div className="flex-1 bg-blue-600/20 p-3 rounded-lg border border-blue-400/50">
-          <p className="text-xs text-white/70">Điểm</p>
-          <p className="text-2xl font-bold text-blue-300">{score}</p>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div
+        className="relative bg-black/70 border-2 border-yellow-400/40 rounded-lg overflow-hidden"
+        style={{ width: CONTAINER_WIDTH, height: CONTAINER_HEIGHT }}
+      >
+        {/* HUD */}
+        <div className="absolute top-2 left-2 text-xs text-white">
+          ⏱ {timeLeft}s
         </div>
-        <div className="flex-1 bg-red-600/20 p-3 rounded-lg border border-red-400/50">
-          <p className="text-xs text-white/70">Thời gian</p>
-          <p className="text-2xl font-bold text-red-300">{timeLeft}s</p>
+        <div className="absolute top-2 right-2 text-xs text-white">
+          ⭐ {score}/{REQUIRED_SCORE}
         </div>
-        <div className="flex-1 bg-green-600/20 p-3 rounded-lg border border-green-400/50">
-          <p className="text-xs text-white/70">Cần</p>
-          <p className="text-2xl font-bold text-yellow-400">{REQUIRED_SCORE}</p>
-        </div>
-      </div>
 
-      {/* Game Area */}
-      <div className="flex-1 flex flex-col items-center">
-        <div
-          ref={containerRef}
-          className="flex-1 bg-gradient-to-b from-black/50 to-black/70 border-3 border-yellow-400/40 rounded-lg relative overflow-hidden"
-          style={{
-            height: `${CONTAINER_HEIGHT}px`,
-            width: `${CONTAINER_WIDTH}px`,
-            maxWidth: '100%'
-          }}
-        >
-          {/* Falling items */}
-          {fallingItems.map(item => (
-            <div
-              key={item.id}
-              className={`absolute rounded-lg font-bold text-center flex items-center justify-center transition-all`}
-              style={{
-                left: `${item.x}px`,
-                top: `${item.y}px`,
-                width: `${ITEM_SIZE}px`,
-                height: `${ITEM_SIZE}px`,
-                backgroundColor: item.isCorrect ? '#10b981' : '#ef4444',
-                color: 'white',
-                boxShadow: item.isCorrect 
-                  ? '0 0 15px rgba(16, 185, 129, 0.8)' 
-                  : '0 0 15px rgba(239, 68, 68, 0.8)',
-                padding: '8px',
-                wordBreak: 'break-word',
-                fontSize: '12px',
-                lineHeight: '1.2',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                border: '2px solid white',
-                zIndex: 10
-              }}
-            >
-              {item.label}
-            </div>
-          ))}
-
-          {/* Basket */}
+        {/* Items */}
+        {fallingItems.map(i => (
           <div
-            className="absolute bottom-2 left-0 flex items-center justify-center rounded-lg transition-all duration-50"
+            key={i.id}
+            className="absolute text-xs text-white font-bold rounded-lg flex items-center justify-center text-center"
             style={{
-              left: `${basketX}px`,
-              width: `${BASKET_WIDTH}px`,
-              height: '60px',
-              backgroundColor: '#f59e0b',
-              boxShadow: '0 0 25px rgba(245, 158, 11, 0.8)',
-              border: '3px solid #fbbf24',
-              zIndex: 20
+              width: ITEM_SIZE,
+              height: ITEM_SIZE,
+              left: i.x,
+              top: i.y,
+              background: i.isCorrect ? '#10b981' : '#ef4444'
             }}
           >
-            <span className="text-white font-bold text-2xl">🧺</span>
+            {i.label}
           </div>
+        ))}
 
-          {/* Keyboard controls hint */}
-          <div className="absolute top-3 left-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
-            Dùng <kbd className="bg-black/80 px-2 py-0.5 rounded mx-1">A</kbd> 
-            và <kbd className="bg-black/80 px-2 py-0.5 rounded mx-1">D</kbd> để di chuyển
-          </div>
-          
-          {/* Score progress */}
-          <div className="absolute top-3 right-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
-            Tiến độ: {score}/{REQUIRED_SCORE}
-          </div>
-        </div>
-        
-        {/* Instructions */}
-        <div className="mt-4 text-center text-sm text-white/70">
-          <p>Di chuyển giỏ để hứng ý tưởng xanh (+10) và tránh ý tưởng đỏ (-5)</p>
+        {/* Basket */}
+        <div
+          className="absolute bottom-2 h-[60px] bg-yellow-500 rounded-lg flex items-center justify-center"
+          style={{ left: basketX, width: BASKET_WIDTH }}
+        >
+          🧺
         </div>
       </div>
     </div>
