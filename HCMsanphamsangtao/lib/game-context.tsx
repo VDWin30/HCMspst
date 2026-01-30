@@ -3,11 +3,18 @@
 import React, { createContext, useContext, useState } from 'react';
 
 type GameState = {
-  currentStage: number; // 0 = Home
+  currentStage: number;
   score: number;
 
   // Stage 2
   stage2Answers: Record<string, number>;
+
+  // Stage 3
+  stage3Score: number;
+  stage3Moves: number;
+
+  // Stage 5
+  stage5Answers: Record<string, boolean>;
 };
 
 type GameContextType = {
@@ -15,14 +22,25 @@ type GameContextType = {
 
   moveToStage: (stage: number) => void;
 
-  // Score
+  /* ===== SCORE ===== */
   addScore: (point: number) => void;
-  getTotalScore: () => number;
 
-  // Stage helpers
+  /* ===== STAGE 1 ===== */
   completeStage1: () => void;
-  recordStage2Answer: (questionId: string, answer: number) => void;
+
+  /* ===== STAGE 2 ===== */
+  recordStage2Answer: (id: string, answer: number) => void;
   addStage2Score: (point: number) => void;
+
+  /* ===== STAGE 3 ===== */
+  startStage3: () => void;
+  recordStage3Move: () => void;
+
+  /* ===== STAGE 4 ===== */
+  addStage4Score: (point: number) => void;
+
+  /* ===== STAGE 5 ===== */
+  answerStage5: (id: string, correct: boolean) => void;
 
   resetGame: () => void;
 };
@@ -34,46 +52,61 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     currentStage: 0,
     score: 0,
     stage2Answers: {},
+    stage3Score: 0,
+    stage3Moves: 0,
+    stage5Answers: {},
   });
 
   /* ===== NAVIGATION ===== */
   const moveToStage = (stage: number) => {
-    setGameState(prev => ({ ...prev, currentStage: stage }));
+    setGameState(p => ({ ...p, currentStage: stage }));
   };
 
   /* ===== SCORE ===== */
   const addScore = (point: number) => {
-    setGameState(prev => ({
-      ...prev,
-      score: prev.score + point,
-    }));
+    setGameState(p => ({ ...p, score: p.score + point }));
   };
-
-  const getTotalScore = () => gameState.score;
 
   /* ===== STAGE 1 ===== */
-  const completeStage1 = () => {
-    setGameState(prev => ({
-      ...prev,
-      score: prev.score + 100,
-    }));
-  };
+  const completeStage1 = () => addScore(100);
 
   /* ===== STAGE 2 ===== */
-  const recordStage2Answer = (questionId: string, answer: number) => {
-    setGameState(prev => ({
-      ...prev,
-      stage2Answers: {
-        ...prev.stage2Answers,
-        [questionId]: answer,
-      },
+  const recordStage2Answer = (id: string, answer: number) => {
+    setGameState(p => ({
+      ...p,
+      stage2Answers: { ...p.stage2Answers, [id]: answer },
     }));
   };
 
-  const addStage2Score = (point: number) => {
-    setGameState(prev => ({
-      ...prev,
-      score: prev.score + point,
+  const addStage2Score = (point: number) => addScore(point);
+
+  /* ===== STAGE 3 ===== */
+  const startStage3 = () => {
+    setGameState(p => ({
+      ...p,
+      stage3Score: 500,
+      stage3Moves: 0,
+    }));
+  };
+
+  const recordStage3Move = () => {
+    setGameState(p => ({
+      ...p,
+      stage3Moves: p.stage3Moves + 1,
+      stage3Score: Math.max(0, p.stage3Score - 10),
+      score: Math.max(0, p.score - 10),
+    }));
+  };
+
+  /* ===== STAGE 4 ===== */
+  const addStage4Score = (point: number) => addScore(point);
+
+  /* ===== STAGE 5 ===== */
+  const answerStage5 = (id: string, correct: boolean) => {
+    setGameState(p => ({
+      ...p,
+      stage5Answers: { ...p.stage5Answers, [id]: correct },
+      score: correct ? p.score + 100 : p.score,
     }));
   };
 
@@ -83,6 +116,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       currentStage: 0,
       score: 0,
       stage2Answers: {},
+      stage3Score: 0,
+      stage3Moves: 0,
+      stage5Answers: {},
     });
   };
 
@@ -92,10 +128,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         gameState,
         moveToStage,
         addScore,
-        getTotalScore,
         completeStage1,
         recordStage2Answer,
         addStage2Score,
+        startStage3,
+        recordStage3Move,
+        addStage4Score,
+        answerStage5,
         resetGame,
       }}
     >
