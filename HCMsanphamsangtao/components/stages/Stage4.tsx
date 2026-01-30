@@ -22,7 +22,7 @@ export function Stage4() {
   const [fallingItems, setFallingItems] = useState<FallingItem[]>([]);
   const [completed, setCompleted] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
-  const [showGameArea, setShowGameArea] = useState(false);
+  const [gameStatus, setGameStatus] = useState<'idle' | 'playing' | 'finished' | 'failed'>('idle');
   const containerRef = useRef<HTMLDivElement>(null);
   const gameLoopRef = useRef<number | null>(null);
   const spawnRef = useRef<number | null>(null);
@@ -37,14 +37,14 @@ export function Stage4() {
   const REQUIRED_SCORE = 200;
   const INITIAL_TIME = 30;
 
-  // Xóa tất cả interval khi component unmount
+  // Cleanup khi component unmount
   useEffect(() => {
     return () => {
-      cleanupGame();
+      cleanupAllIntervals();
     };
   }, []);
 
-  const cleanupGame = () => {
+  const cleanupAllIntervals = () => {
     if (gameLoopRef.current) {
       window.clearInterval(gameLoopRef.current);
       gameLoopRef.current = null;
@@ -60,15 +60,17 @@ export function Stage4() {
     keysRef.current = {};
   };
 
-  // Smooth keyboard movement
+  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameStatus !== 'playing') return;
+      
       const key = e.key.toLowerCase();
-      if ((key === 'a' || key === 'arrowleft') && gameStarted) {
+      if (key === 'a' || key === 'arrowleft') {
         e.preventDefault();
         keysRef.current['left'] = true;
       }
-      if ((key === 'd' || key === 'arrowright') && gameStarted) {
+      if (key === 'd' || key === 'arrowright') {
         e.preventDefault();
         keysRef.current['right'] = true;
       }
@@ -87,11 +89,11 @@ export function Stage4() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [gameStarted]);
+  }, [gameStatus]);
 
-  // Smooth basket movement loop
+  // Basket movement
   useEffect(() => {
-    if (!gameStarted || completed) return;
+    if (gameStatus !== 'playing') return;
 
     const moveLoop = window.setInterval(() => {
       setBasketX(prev => {
@@ -103,35 +105,36 @@ export function Stage4() {
     }, 30);
 
     return () => window.clearInterval(moveLoop);
-  }, [gameStarted, completed]);
+  }, [gameStatus]);
 
   // Game timer
   useEffect(() => {
-    if (!gameStarted || completed) return;
+    if (gameStatus !== 'playing') return;
 
-    // Xóa timer cũ nếu có
+    // Clear existing timer
     if (timerRef.current) window.clearInterval(timerRef.current);
 
     timerRef.current = window.setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) {
-          // Thời gian hết
+        const newTime = prev - 1;
+        
+        if (newTime <= 0) {
+          // Time's up
           if (timerRef.current) {
             window.clearInterval(timerRef.current);
             timerRef.current = null;
           }
           
-          // Kiểm tra điểm
           if (score >= REQUIRED_SCORE) {
+            setGameStatus('finished');
             setCompleted(true);
           } else {
+            setGameStatus('failed');
             setFailedAttempts(prev => prev + 1);
           }
-          setGameStarted(false);
-          setShowGameArea(false);
           return 0;
         }
-        return prev - 1;
+        return newTime;
       });
     }, 1000);
 
@@ -141,11 +144,11 @@ export function Stage4() {
         timerRef.current = null;
       }
     };
-  }, [gameStarted, completed, score]);
+  }, [gameStatus, score]);
 
   // Spawn falling items
   useEffect(() => {
-    if (!gameStarted || completed) return;
+    if (gameStatus !== 'playing') return;
 
     if (spawnRef.current) window.clearInterval(spawnRef.current);
     
@@ -169,11 +172,11 @@ export function Stage4() {
         spawnRef.current = null;
       }
     };
-  }, [gameStarted, completed]);
+  }, [gameStatus]);
 
   // Game loop - movement and collision
   useEffect(() => {
-    if (!gameStarted || completed) return;
+    if (gameStatus !== 'playing') return;
 
     if (gameLoopRef.current) window.clearInterval(gameLoopRef.current);
     
@@ -204,7 +207,6 @@ export function Stage4() {
             } else {
               setScore(s => Math.max(0, s - 5));
             }
-            // Không thêm vào remaining
           } else if (item.y < CONTAINER_HEIGHT) {
             remaining.push(item);
           }
@@ -220,37 +222,36 @@ export function Stage4() {
         gameLoopRef.current = null;
       }
     };
-  }, [gameStarted, basketX, completed]);
+  }, [gameStatus, basketX]);
 
-  // Kiểm tra điều kiện thắng
+  // Check win condition during gameplay
   useEffect(() => {
-    if (gameStarted && !completed && score >= REQUIRED_SCORE) {
+    if (gameStatus === 'playing' && score >= REQUIRED_SCORE) {
+      setGameStatus('finished');
       setCompleted(true);
-      setGameStarted(false);
-      setShowGameArea(false);
+      cleanupAllIntervals();
     }
-  }, [score, gameStarted, completed]);
+  }, [score, gameStatus]);
 
-  // Xử lý khi hoàn thành
+  // Handle completion
   useEffect(() => {
-    if (completed && score >= REQUIRED_SCORE) {
+    if (gameStatus === 'finished' && score >= REQUIRED_SCORE) {
       addStage4Score(score);
-      cleanupGame();
     }
-  }, [completed, score, addStage4Score]);
+  }, [gameStatus, score, addStage4Score]);
 
   const handleStart = () => {
-    // Dọn dẹp hoàn toàn
-    cleanupGame();
+    // Clean up everything
+    cleanupAllIntervals();
     
-    // Reset tất cả state
+    // Reset all states
+    setGameStatus('playing');
     setGameStarted(true);
     setCompleted(false);
     setTimeLeft(INITIAL_TIME);
     setScore(0);
     setFallingItems([]);
     setBasketX(175);
-    setShowGameArea(true);
     keysRef.current = {};
   };
 
@@ -264,13 +265,13 @@ export function Stage4() {
     }
   };
 
-  // Hiển thị màn hình hoàn thành
-  if (completed && score >= REQUIRED_SCORE) {
+  // Completion screen
+  if (gameStatus === 'finished') {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center p-8 bg-green-500/20 rounded-xl border-2 border-green-400 backdrop-blur max-w-md w-full">
           <h3 className="text-3xl font-bold text-green-400 mb-2">Tuyệt vời!</h3>
-          <p className="text-white/80 mb-4">Bạn đã hứng được {score} điểm</p>
+          <p className="text-white/80 mb-6">Bạn đã hứng được {score} điểm</p>
           <Button 
             onClick={handleContinue}
             className="bg-green-500 hover:bg-green-600 text-white font-bold w-full py-3 text-lg"
@@ -282,33 +283,31 @@ export function Stage4() {
     );
   }
 
-  // Hiển thị màn hình thất bại
-  if (!gameStarted && timeLeft === 0 && score < REQUIRED_SCORE) {
+  // Failure screen
+  if (gameStatus === 'failed') {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center p-8 bg-red-500/20 rounded-xl border-2 border-red-400 backdrop-blur max-w-md w-full">
           <h3 className="text-2xl font-bold text-red-400 mb-2">Chưa đạt yêu cầu!</h3>
           <p className="text-white/80 mb-4">
             Bạn có <span className="font-bold text-yellow-400">{score}</span>/{REQUIRED_SCORE} điểm
           </p>
           <p className="text-white/60 text-sm mb-6">
-            Cần thêm <span className="text-red-400 font-bold">{REQUIRED_SCORE - score}</span> điểm
+            Đã thử: {failedAttempts} lần
           </p>
-          <div className="flex flex-col gap-3">
-            <Button
-              onClick={handleRetry}
-              className="bg-yellow-400 hover:bg-yellow-500 text-red-700 font-bold py-3 text-lg"
-            >
-              Chơi lại (Lần {failedAttempts + 1})
-            </Button>
-          </div>
+          <Button
+            onClick={handleRetry}
+            className="bg-yellow-400 hover:bg-yellow-500 text-red-700 font-bold w-full py-3 text-lg"
+          >
+            Chơi lại
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Hiển thị màn hình bắt đầu
-  if (!gameStarted && !completed) {
+  // Start screen (idle state)
+  if (gameStatus === 'idle') {
     return (
       <div className="flex flex-col gap-6 p-6 h-full">
         <div className="text-center">
@@ -351,7 +350,7 @@ export function Stage4() {
     );
   }
 
-  // Hiển thị game đang chạy
+  // Playing screen
   return (
     <div className="flex flex-col gap-6 p-6 h-full">
       <div className="text-center">
@@ -377,79 +376,77 @@ export function Stage4() {
       </div>
 
       {/* Game Area */}
-      {showGameArea && (
-        <div className="flex-1 flex flex-col items-center">
-          <div
-            ref={containerRef}
-            className="flex-1 bg-gradient-to-b from-black/50 to-black/70 border-3 border-yellow-400/40 rounded-lg relative overflow-hidden"
-            style={{
-              height: `${CONTAINER_HEIGHT}px`,
-              width: `${CONTAINER_WIDTH}px`,
-              maxWidth: '100%'
-            }}
-          >
-            {/* Falling items */}
-            {fallingItems.map(item => (
-              <div
-                key={item.id}
-                className={`absolute rounded-lg font-bold text-center flex items-center justify-center transition-all`}
-                style={{
-                  left: `${item.x}px`,
-                  top: `${item.y}px`,
-                  width: `${ITEM_SIZE}px`,
-                  height: `${ITEM_SIZE}px`,
-                  backgroundColor: item.isCorrect ? '#10b981' : '#ef4444',
-                  color: 'white',
-                  boxShadow: item.isCorrect 
-                    ? '0 0 15px rgba(16, 185, 129, 0.8)' 
-                    : '0 0 15px rgba(239, 68, 68, 0.8)',
-                  padding: '8px',
-                  wordBreak: 'break-word',
-                  fontSize: '12px',
-                  lineHeight: '1.2',
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                  border: '2px solid white',
-                  zIndex: 10
-                }}
-              >
-                {item.label}
-              </div>
-            ))}
-
-            {/* Basket */}
+      <div className="flex-1 flex flex-col items-center">
+        <div
+          ref={containerRef}
+          className="flex-1 bg-gradient-to-b from-black/50 to-black/70 border-3 border-yellow-400/40 rounded-lg relative overflow-hidden"
+          style={{
+            height: `${CONTAINER_HEIGHT}px`,
+            width: `${CONTAINER_WIDTH}px`,
+            maxWidth: '100%'
+          }}
+        >
+          {/* Falling items */}
+          {fallingItems.map(item => (
             <div
-              className="absolute bottom-2 left-0 flex items-center justify-center rounded-lg transition-all duration-50"
+              key={item.id}
+              className={`absolute rounded-lg font-bold text-center flex items-center justify-center transition-all`}
               style={{
-                left: `${basketX}px`,
-                width: `${BASKET_WIDTH}px`,
-                height: '60px',
-                backgroundColor: '#f59e0b',
-                boxShadow: '0 0 25px rgba(245, 158, 11, 0.8)',
-                border: '3px solid #fbbf24',
-                zIndex: 20
+                left: `${item.x}px`,
+                top: `${item.y}px`,
+                width: `${ITEM_SIZE}px`,
+                height: `${ITEM_SIZE}px`,
+                backgroundColor: item.isCorrect ? '#10b981' : '#ef4444',
+                color: 'white',
+                boxShadow: item.isCorrect 
+                  ? '0 0 15px rgba(16, 185, 129, 0.8)' 
+                  : '0 0 15px rgba(239, 68, 68, 0.8)',
+                padding: '8px',
+                wordBreak: 'break-word',
+                fontSize: '12px',
+                lineHeight: '1.2',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+                border: '2px solid white',
+                zIndex: 10
               }}
             >
-              <span className="text-white font-bold text-2xl">🧺</span>
+              {item.label}
             </div>
+          ))}
 
-            {/* Keyboard controls hint */}
-            <div className="absolute top-3 left-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
-              Dùng <kbd className="bg-black/80 px-2 py-0.5 rounded mx-1">A</kbd> 
-              và <kbd className="bg-black/80 px-2 py-0.5 rounded mx-1">D</kbd> để di chuyển
-            </div>
-            
-            {/* Score progress */}
-            <div className="absolute top-3 right-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
-              Tiến độ: {score}/{REQUIRED_SCORE}
-            </div>
+          {/* Basket */}
+          <div
+            className="absolute bottom-2 left-0 flex items-center justify-center rounded-lg transition-all duration-50"
+            style={{
+              left: `${basketX}px`,
+              width: `${BASKET_WIDTH}px`,
+              height: '60px',
+              backgroundColor: '#f59e0b',
+              boxShadow: '0 0 25px rgba(245, 158, 11, 0.8)',
+              border: '3px solid #fbbf24',
+              zIndex: 20
+            }}
+          >
+            <span className="text-white font-bold text-2xl">🧺</span>
+          </div>
+
+          {/* Keyboard controls hint */}
+          <div className="absolute top-3 left-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
+            Dùng <kbd className="bg-black/80 px-2 py-0.5 rounded mx-1">A</kbd> 
+            và <kbd className="bg-black/80 px-2 py-0.5 rounded mx-1">D</kbd> để di chuyển
           </div>
           
-          {/* Instructions */}
-          <div className="mt-4 text-center text-sm text-white/70">
-            <p>Di chuyển giỏ để hứng ý tưởng xanh (+10) và tránh ý tưởng đỏ (-5)</p>
+          {/* Score progress */}
+          <div className="absolute top-3 right-3 text-xs text-white/80 bg-black/60 px-2 py-1 rounded">
+            Tiến độ: {score}/{REQUIRED_SCORE}
           </div>
         </div>
-      )}
+        
+        {/* Instructions */}
+        <div className="mt-4 text-center text-sm text-white/70">
+          <p>Di chuyển giỏ để hứng ý tưởng xanh (+10) và tránh ý tưởng đỏ (-5)</p>
+        </div>
+      </div>
     </div>
   );
 }
