@@ -13,7 +13,7 @@ interface Card {
   isMatched: boolean;
 }
 
-export function Stage3() {
+export function Stage1() {
   const {
     moveToStage,
     recordStage3Move,
