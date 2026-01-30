@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useGame } from '@/lib/game-context';
 import { gameData } from '@/lib/game-data';
@@ -40,6 +40,9 @@ export function Stage1() {
   const [imageUrl, setImageUrl] = useState('');
   const [completed, setCompleted] = useState(false);
 
+  // khóa gọi completeStage1 chỉ 1 lần
+  const completedRef = useRef(false);
+
   useEffect(() => {
     initPuzzle();
   }, []);
@@ -48,7 +51,6 @@ export function Stage1() {
   const initPuzzle = () => {
     const puzzle =
       gameData.stage1[Math.floor(Math.random() * gameData.stage1.length)];
-
     const level = getRandomPuzzleLevel();
 
     setCols(level.cols);
@@ -56,12 +58,13 @@ export function Stage1() {
     setImageUrl(puzzle.image);
     setPlaced(new Set());
     setCompleted(false);
+    completedRef.current = false;
 
     const temp: Piece[] = [];
     for (let r = 0; r < level.rows; r++) {
       for (let c = 0; c < level.cols; c++) {
         temp.push({
-          id: `piece-${r}-${c}-${Math.random()}`,
+          id: crypto.randomUUID(),
           col: c,
           row: r,
         });
@@ -73,24 +76,34 @@ export function Stage1() {
 
   /* ===== DRAG ===== */
   const onDragStart = (e: React.DragEvent, id: string) => {
+    if (completed) return;
     e.dataTransfer.setData('pieceId', id);
   };
 
   const onDrop = (e: React.DragEvent, col: number, row: number) => {
     e.preventDefault();
+    if (completed) return;
+
     const id = e.dataTransfer.getData('pieceId');
     const piece = pieces.find(p => p.id === id);
     if (!piece) return;
 
     if (piece.col === col && piece.row === row) {
       setPlaced(prev => {
+        if (prev.has(id)) return prev;
+
         const next = new Set(prev);
         next.add(id);
 
-        if (next.size === pieces.length) {
+        if (
+          next.size === pieces.length &&
+          !completedRef.current
+        ) {
+          completedRef.current = true;
+
           setTimeout(() => {
             setCompleted(true);
-            completeStage1(); // +100 điểm
+            completeStage1(); // +100 điểm (đã được GameContext khóa)
           }, 300);
         }
 
@@ -182,7 +195,7 @@ export function Stage1() {
             return (
               <div
                 key={piece.id}
-                draggable={!isPlaced}
+                draggable={!isPlaced && !completed}
                 onDragStart={e => onDragStart(e, piece.id)}
                 className={`rounded border ${
                   isPlaced ? 'opacity-30' : 'cursor-grab hover:scale-105'
