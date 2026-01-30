@@ -16,6 +16,7 @@ interface FallingItem {
 export function Stage4() {
   const { moveToStage, addStage4Score } = useGame();
 
+  /* ================= STATE ================= */
   const [status, setStatus] =
     useState<'idle' | 'playing' | 'finished' | 'failed'>('idle');
 
@@ -23,16 +24,27 @@ export function Stage4() {
   const [score, setScore] = useState(0);
   const [basketX, setBasketX] = useState(240);
   const [items, setItems] = useState<FallingItem[]>([]);
+  const [combo, setCombo] = useState(0);
+  const [speed, setSpeed] = useState(4);
 
+  /* ================= REF ================= */
   const keys = useRef<{ left?: boolean; right?: boolean }>({});
+  const basketRef = useRef(basketX);
   const saved = useRef(false);
 
+  /* ================= CONST ================= */
   const WIDTH = 900;
   const HEIGHT = 520;
   const ITEM = 80;
   const BASKET = 120;
-  const SPEED = 5;
   const TARGET = 200;
+  const BASE_SPEED = 4;
+  const MAX_SPEED = 9;
+
+  /* ================= SYNC REF ================= */
+  useEffect(() => {
+    basketRef.current = basketX;
+  }, [basketX]);
 
   /* ================= KEYBOARD ================= */
   useEffect(() => {
@@ -67,7 +79,7 @@ export function Stage4() {
     return () => clearInterval(id);
   }, [status]);
 
-  /* ================= TIMER ================= */
+  /* ================= TIMER + SPEED UP ================= */
   useEffect(() => {
     if (status !== 'playing') return;
     const id = setInterval(() => {
@@ -77,19 +89,26 @@ export function Stage4() {
           setStatus(score >= TARGET ? 'finished' : 'failed');
           return 0;
         }
+
+        // tăng tốc theo thời gian
+        setSpeed(s => Math.min(MAX_SPEED, BASE_SPEED + (30 - t) * 0.15));
+
         return t - 1;
       });
     }, 1000);
     return () => clearInterval(id);
   }, [status, score]);
 
-  /* ================= SPAWN ================= */
+  /* ================= SPAWN ITEM ================= */
   useEffect(() => {
     if (status !== 'playing') return;
     const id = setInterval(() => {
-      const r = gameData.stage4[Math.floor(Math.random() * gameData.stage4.length)];
+      const r =
+        gameData.stage4[
+          Math.floor(Math.random() * gameData.stage4.length)
+        ];
       setItems(i => [
-        ...i.slice(-15),
+        ...i.slice(-18),
         {
           id: crypto.randomUUID(),
           label: r.label,
@@ -98,33 +117,45 @@ export function Stage4() {
           y: -ITEM
         }
       ]);
-    }, 700);
+    }, 650);
     return () => clearInterval(id);
   }, [status]);
 
-  /* ================= GAME LOOP ================= */
+  /* ================= GAME LOOP (KHÔNG GIẬT) ================= */
   useEffect(() => {
     if (status !== 'playing') return;
+
     const id = setInterval(() => {
       setItems(items =>
         items
-          .map(i => ({ ...i, y: i.y + SPEED }))
+          .map(i => ({ ...i, y: i.y + speed }))
           .filter(i => {
+            const basketY = HEIGHT - 80;
+
             const hit =
-              i.y + ITEM >= HEIGHT - 80 &&
-              i.x + ITEM / 2 >= basketX &&
-              i.x + ITEM / 2 <= basketX + BASKET;
+              i.y + ITEM >= basketY &&
+              i.y + ITEM <= basketY + 60 &&
+              i.x + ITEM * 0.25 >= basketRef.current &&
+              i.x + ITEM * 0.75 <= basketRef.current + BASKET;
 
             if (hit) {
-              setScore(s => (i.isCorrect ? s + 10 : Math.max(0, s - 5)));
+              if (i.isCorrect) {
+                setCombo(c => c + 1);
+                setScore(s => s + 10 * (combo >= 3 ? 2 : 1));
+              } else {
+                setCombo(0);
+                setScore(s => Math.max(0, s - 5));
+              }
               return false;
             }
+
             return i.y < HEIGHT;
           })
       );
     }, 30);
+
     return () => clearInterval(id);
-  }, [status, basketX]);
+  }, [status, speed, combo]);
 
   /* ================= SAVE SCORE ================= */
   useEffect(() => {
@@ -134,9 +165,12 @@ export function Stage4() {
     }
   }, [status, score, addStage4Score]);
 
+  /* ================= START ================= */
   const start = () => {
     saved.current = false;
     setScore(0);
+    setCombo(0);
+    setSpeed(BASE_SPEED);
     setTimeLeft(30);
     setItems([]);
     setBasketX(240);
@@ -152,13 +186,13 @@ export function Stage4() {
           <h2 className="text-2xl font-bold text-yellow-400 mb-2">
             GIAI ĐOẠN 4
           </h2>
-          <p className="text-white mb-6">
+          <p className="text-white mb-4">
             Đạt {TARGET} điểm trong 30 giây
           </p>
 
           {status === 'failed' && (
-            <p className="text-red-400 mb-4">
-              Bạn chỉ đạt {score} điểm
+            <p className="text-red-400 mb-3">
+              Bạn đạt {score} điểm
             </p>
           )}
 
@@ -186,10 +220,18 @@ export function Stage4() {
         style={{ width: WIDTH, height: HEIGHT }}
       >
         {/* HUD */}
-        <div className="absolute top-2 left-3 text-white">⏱ {timeLeft}s</div>
+        <div className="absolute top-2 left-3 text-white">
+          ⏱ {timeLeft}s
+        </div>
         <div className="absolute top-2 right-3 text-white">
           ⭐ {score}/{TARGET}
         </div>
+
+        {combo >= 3 && (
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 text-yellow-400 font-bold animate-pulse">
+            🔥 COMBO x2
+          </div>
+        )}
 
         {/* ITEMS */}
         {items.map(i => (
