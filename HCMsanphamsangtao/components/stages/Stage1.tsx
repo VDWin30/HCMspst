@@ -1,187 +1,188 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { useGame } from '@/lib/game-context';
+import React, { useEffect, useState } from 'react';
 import { gameData } from '@/lib/game-data';
+import { useGame } from '@/lib/game-context';
+import { Button } from '@/components/ui/button';
 
-interface Piece {
+interface Card {
   id: string;
-  col: number;
-  row: number;
+  imageUrl: string;
+  title: string;
+  pairId: string;
+  isMatched: boolean;
 }
 
-const PIECE_SIZE = 80;
+export function Stage3() {
+  const {
+    moveToStage,
+    recordStage3Move,
+    gameState,
+    startStage3,
+  } = useGame();
 
-/* ===== LEVEL CONFIG ===== */
-const LEVELS = [
-  { cols: 3, rows: 2, rate: 5 },
-  { cols: 4, rows: 2, rate: 23.75 },
-  { cols: 4, rows: 3, rate: 23.75 },
-  { cols: 7, rows: 2, rate: 23.75 },
-  { cols: 4, rows: 4, rate: 23.75 },
-];
-
-const pickLevel = () => {
-  let roll = Math.random() * 100;
-  for (const lvl of LEVELS) {
-    if (roll < lvl.rate) return lvl;
-    roll -= lvl.rate;
-  }
-  return LEVELS[LEVELS.length - 1];
-};
-
-export function Stage1() {
-  const { moveToStage, completeStage1 } = useGame();
-
-  const [pieces, setPieces] = useState<Piece[]>([]);
-  const [placed, setPlaced] = useState<Set<string>>(new Set());
-  const [cols, setCols] = useState(3);
-  const [rows, setRows] = useState(2);
-  const [imageUrl, setImageUrl] = useState('');
+  const [cards, setCards] = useState<Card[]>([]);
+  const [flipped, setFlipped] = useState<string[]>([]);
+  const [matches, setMatches] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const [locked, setLocked] = useState(false);
 
-  /* ===== INIT ===== */
-  const initPuzzle = useCallback(() => {
-    const puzzle =
-      gameData.stage1[Math.floor(Math.random() * gameData.stage1.length)];
-    const level = pickLevel();
+  /* ================= INIT ================= */
+  useEffect(() => {
+    startStage3();
 
-    setCols(level.cols);
-    setRows(level.rows);
-    setImageUrl(puzzle.image);
-    setPlaced(new Set());
-    setCompleted(false);
+    const images = [...gameData.stage3]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 6);
 
-    const temp: Piece[] = [];
-    let index = 0;
+    const pairs: Card[] = images.flatMap((img, idx) => [
+      {
+        id: `${img.id}-a`,
+        imageUrl: img.imageUrl,
+        title: img.title,
+        pairId: String(idx),
+        isMatched: false,
+      },
+      {
+        id: `${img.id}-b`,
+        imageUrl: img.imageUrl,
+        title: img.title,
+        pairId: String(idx),
+        isMatched: false,
+      },
+    ]);
 
-    for (let r = 0; r < level.rows; r++) {
-      for (let c = 0; c < level.cols; c++) {
-        temp.push({
-          id: `piece-${index++}`, // ✅ an toàn
-          col: c,
-          row: r,
-        });
-      }
-    }
-
-    setPieces(temp.sort(() => Math.random() - 0.5));
+    setCards(pairs.sort(() => Math.random() - 0.5));
   }, []);
 
-  useEffect(() => {
-    initPuzzle();
-  }, [initPuzzle]);
+  /* ================= CLICK ================= */
+  const handleClick = (id: string) => {
+    if (locked) return;
+    if (flipped.includes(id)) return;
 
-  /* ===== MAP TỌA ĐỘ → PIECE ===== */
-  const pieceMap = useMemo(() => {
-    const map = new Map<string, Piece>();
-    pieces.forEach(p => map.set(`${p.row}-${p.col}`, p));
-    return map;
-  }, [pieces]);
+    const card = cards.find(c => c.id === id);
+    if (!card || card.isMatched) return;
 
-  /* ===== DRAG ===== */
-  const onDragStart = (e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData('pieceId', id);
-  };
+    const next = [...flipped, id];
+    setFlipped(next);
 
-  const onDrop = (e: React.DragEvent, col: number, row: number) => {
-    e.preventDefault();
-    const id = e.dataTransfer.getData('pieceId');
-    const piece = pieces.find(p => p.id === id);
-    if (!piece) return;
-
-    if (piece.col === col && piece.row === row) {
-      setPlaced(prev => {
-        const next = new Set(prev);
-        next.add(id);
-
-        if (next.size === pieces.length) {
-          setTimeout(() => {
-            setCompleted(true);
-            completeStage1();
-          }, 300);
-        }
-
-        return next;
-      });
+    if (next.length === 2) {
+      setLocked(true);
+      recordStage3Move();
+      checkMatch(next);
     }
   };
 
-  /* ===== DONE ===== */
-  if (completed) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="p-10 bg-green-500/20 border-2 border-green-400 rounded-xl text-center">
-          <h2 className="text-3xl font-bold text-green-400 mb-3">
-            Hoàn thành!
-          </h2>
-          <p className="text-white/80 mb-4">
-            Bạn nhận được <span className="text-yellow-300 font-bold">+100 điểm</span>
+  /* ================= MATCH ================= */
+  const checkMatch = (ids: string[]) => {
+    const [a, b] = ids.map(id =>
+      cards.find(c => c.id === id)
+    );
+
+    if (!a || !b) {
+      resetFlip();
+      return;
+    }
+
+    if (a.pairId === b.pairId) {
+      setCards(prev =>
+        prev.map(c =>
+          c.pairId === a.pairId
+            ? { ...c, isMatched: true }
+            : c
+        )
+      );
+
+      setMatches(prev => {
+        const next = prev + 1;
+        if (next === cards.length / 2) {
+          setCompleted(true);
+        }
+        return next;
+      });
+
+      resetFlip(300);
+    } else {
+      resetFlip(700);
+    }
+  };
+
+  const resetFlip = (delay = 0) => {
+    setTimeout(() => {
+      setFlipped([]);
+      setLocked(false);
+    }, delay);
+  };
+
+  /* ================= UI ================= */
+  return (
+    <div className="flex flex-col gap-6 p-6 min-h-screen bg-gradient-to-br from-slate-900 to-blue-900">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-white">
+          🧠 Giai đoạn 3: Tìm ảnh giống nhau
+        </h2>
+        <p className="text-white/70 text-sm">
+          Mỗi lượt sai bị trừ 10 điểm
+        </p>
+      </div>
+
+      {completed ? (
+        <div className="max-w-md mx-auto text-center p-8 bg-green-500/20 rounded-xl border border-green-400">
+          <h3 className="text-2xl font-bold text-green-300 mb-2">
+            🎉 Hoàn thành!
+          </h3>
+          <p className="text-white mb-4">
+            Điểm Stage 3:
+            <span className="text-yellow-300 font-bold ml-2">
+              {gameState.stage3Score}
+            </span>
           </p>
           <Button
-            onClick={() => moveToStage(2)}
-            className="bg-green-500 hover:bg-green-600"
+            onClick={() => moveToStage(4)}
+            className="bg-green-600 hover:bg-green-700"
           >
-            Sang giai đoạn 2 →
+            Sang giai đoạn 4 →
           </Button>
         </div>
-      </div>
-    );
-  }
+      ) : (
+        <>
+          <div className="flex justify-between text-white/80 max-w-2xl mx-auto">
+            <span>Cặp đúng: {matches}/{cards.length / 2}</span>
+            <span>Điểm: {gameState.stage3Score}</span>
+          </div>
 
-  /* ===== UI ===== */
-  return (
-    <div className="flex gap-6">
-      {/* BOARD */}
-      <div
-        className="grid gap-1 p-4 bg-black/40 border-2 border-yellow-400/50 rounded"
-        style={{ gridTemplateColumns: `repeat(${cols}, ${PIECE_SIZE}px)` }}
-      >
-        {Array.from({ length: rows }).map((_, r) =>
-          Array.from({ length: cols }).map((_, c) => {
-            const piece = pieceMap.get(`${r}-${c}`);
-            const ok = piece && placed.has(piece.id);
+          <div className="grid grid-cols-4 gap-4 max-w-2xl mx-auto">
+            {cards.map(card => {
+              const isFlipped =
+                flipped.includes(card.id) || card.isMatched;
 
-            return (
-              <div
-                key={`${r}-${c}`}
-                onDragOver={e => e.preventDefault()}
-                onDrop={e => onDrop(e, c, r)}
-                className="border"
-                style={{
-                  width: PIECE_SIZE,
-                  height: PIECE_SIZE,
-                  backgroundImage: ok ? `url(${imageUrl})` : 'none',
-                  backgroundPosition: `-${c * PIECE_SIZE}px -${r * PIECE_SIZE}px`,
-                  backgroundSize: `${cols * PIECE_SIZE}px ${rows * PIECE_SIZE}px`,
-                }}
-              />
-            );
-          })
-        )}
-      </div>
-
-      {/* PIECES (CHỈ HIỆN MẢNH CHƯA ĐẶT) */}
-      <div className="grid grid-cols-2 gap-2">
-        {pieces
-          .filter(p => !placed.has(p.id))
-          .map(p => (
-            <div
-              key={p.id}
-              draggable
-              onDragStart={e => onDragStart(e, p.id)}
-              className="border cursor-grab"
-              style={{
-                width: PIECE_SIZE,
-                height: PIECE_SIZE,
-                backgroundImage: `url(${imageUrl})`,
-                backgroundPosition: `-${p.col * PIECE_SIZE}px -${p.row * PIECE_SIZE}px`,
-                backgroundSize: `${cols * PIECE_SIZE}px ${rows * PIECE_SIZE}px`,
-              }}
-            />
-          ))}
-      </div>
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => handleClick(card.id)}
+                  disabled={card.isMatched}
+                  className={`aspect-square rounded-xl overflow-hidden
+                    transition-all duration-300
+                    ${card.isMatched ? 'opacity-40' : 'hover:scale-105'}
+                    bg-blue-800 shadow-lg`}
+                >
+                  {isFlipped ? (
+                    <img
+                      src={card.imageUrl}
+                      alt={card.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white text-4xl font-bold">
+                      ?
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
