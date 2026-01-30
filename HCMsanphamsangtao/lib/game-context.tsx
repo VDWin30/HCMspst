@@ -10,21 +10,21 @@ export interface GameState {
   currentStage: number;
   score: number;
 
-  // Game 1
+  // Stage 1
   stage1Solved: boolean;
 
-  // Game 2
+  // Stage 2
   stage2Answers: Map<string, number>;
   stage2CorrectCount: number;
 
-  // Game 3
+  // Stage 3
   stage3Matches: Map<string, string>;
   stage3RemainingScore: number;
 
-  // Game 4
+  // Stage 4
   stage4Score: number;
 
-  // Game 5
+  // Stage 5
   stage5Answers: Map<string, string[]>;
   stage5CorrectCount: number;
 }
@@ -32,32 +32,40 @@ export interface GameState {
 interface GameContextType {
   gameState: GameState;
 
-  moveToStage: (stage: number) => void;
+  moveToStage(stage: number): void;
 
-  // Game 1
-  completeStage1: () => void;
+  // Stage 1
+  completeStage1(): void;
 
-  // Game 2
-  answerStage2: (questionId: string, selectedOption: number, isCorrect: boolean) => void;
+  // Stage 2
+  answerStage2(
+    questionId: string,
+    selectedOption: number,
+    isCorrect: boolean
+  ): void;
 
-  // Game 3
-  moveStage3: () => void;
-  recordStage3Match: (matchId: string, matchedWithId: string) => void;
+  // Stage 3
+  recordStage3Match(matchId: string, matchedWithId: string): void;
+  penaltyStage3(): void;
 
-  // Game 4
-  addStage4Score: (points: number) => void;
+  // Stage 4
+  addStage4Score(points: number): void;
 
-  // Game 5
-  answerStage5: (questionId: string, blanks: string[], isCorrect: boolean) => void;
+  // Stage 5
+  answerStage5(
+    questionId: string,
+    blanks: string[],
+    isCorrect: boolean
+  ): void;
 
-  resetGame: () => void;
+  resetGame(): void;
 }
 
 /* =======================
-   INITIAL STATE
+   INITIAL STATE (FACTORY)
 ======================= */
 
-const initialGameState: GameState = {
+const createInitialGameState = (): GameState => ({
   currentStage: 1,
   score: 0,
 
@@ -73,7 +81,7 @@ const initialGameState: GameState = {
 
   stage5Answers: new Map(),
   stage5CorrectCount: 0
-};
+});
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -82,13 +90,16 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 ======================= */
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  const [gameState, setGameState] = useState<GameState>(initialGameState);
+  const [gameState, setGameState] = useState<GameState>(
+    createInitialGameState()
+  );
 
+  /* ===== MOVE STAGE ===== */
   const moveToStage = (stage: number) => {
     setGameState(prev => ({ ...prev, currentStage: stage }));
   };
 
-  /* ===== GAME 1 ===== */
+  /* ===== STAGE 1 ===== */
   const completeStage1 = () => {
     setGameState(prev => {
       if (prev.stage1Solved) return prev;
@@ -100,30 +111,44 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  /* ===== GAME 2 ===== */
+  /* ===== STAGE 2 ===== */
   const answerStage2 = (
     questionId: string,
     selectedOption: number,
     isCorrect: boolean
   ) => {
     setGameState(prev => {
-      const alreadyAnswered = prev.stage2Answers.has(questionId);
+      if (prev.stage2Answers.has(questionId)) return prev;
+
+      const nextAnswers = new Map(prev.stage2Answers);
+      nextAnswers.set(questionId, selectedOption);
 
       return {
         ...prev,
-        stage2Answers: new Map(prev.stage2Answers).set(questionId, selectedOption),
-        stage2CorrectCount: isCorrect && !alreadyAnswered
+        stage2Answers: nextAnswers,
+        stage2CorrectCount: isCorrect
           ? prev.stage2CorrectCount + 1
           : prev.stage2CorrectCount,
-        score: isCorrect && !alreadyAnswered
-          ? prev.score + 10
-          : prev.score
+        score: isCorrect ? prev.score + 10 : prev.score
       };
     });
   };
 
-  /* ===== GAME 3 ===== */
-  const moveStage3 = () => {
+  /* ===== STAGE 3 ===== */
+  const recordStage3Match = (matchId: string, matchedWithId: string) => {
+    setGameState(prev => {
+      const next = new Map(prev.stage3Matches);
+      next.set(matchId, matchedWithId);
+
+      return {
+        ...prev,
+        stage3Matches: next
+      };
+    });
+  };
+
+  // dùng khi chọn sai / quá thời gian
+  const penaltyStage3 = () => {
     setGameState(prev => ({
       ...prev,
       stage3RemainingScore: Math.max(prev.stage3RemainingScore - 10, 0),
@@ -131,14 +156,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const recordStage3Match = (matchId: string, matchedWithId: string) => {
-    setGameState(prev => ({
-      ...prev,
-      stage3Matches: new Map(prev.stage3Matches).set(matchId, matchedWithId)
-    }));
-  };
-
-  /* ===== GAME 4 ===== */
+  /* ===== STAGE 4 ===== */
   const addStage4Score = (points: number) => {
     setGameState(prev => ({
       ...prev,
@@ -147,30 +165,32 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  /* ===== GAME 5 ===== */
+  /* ===== STAGE 5 ===== */
   const answerStage5 = (
     questionId: string,
     blanks: string[],
     isCorrect: boolean
   ) => {
     setGameState(prev => {
-      const alreadyAnswered = prev.stage5Answers.has(questionId);
+      if (prev.stage5Answers.has(questionId)) return prev;
+
+      const nextAnswers = new Map(prev.stage5Answers);
+      nextAnswers.set(questionId, blanks);
 
       return {
         ...prev,
-        stage5Answers: new Map(prev.stage5Answers).set(questionId, blanks),
-        stage5CorrectCount: isCorrect && !alreadyAnswered
+        stage5Answers: nextAnswers,
+        stage5CorrectCount: isCorrect
           ? prev.stage5CorrectCount + 1
           : prev.stage5CorrectCount,
-        score: isCorrect && !alreadyAnswered
-          ? prev.score + 100
-          : prev.score
+        score: isCorrect ? prev.score + 100 : prev.score
       };
     });
   };
 
+  /* ===== RESET ===== */
   const resetGame = () => {
-    setGameState(initialGameState);
+    setGameState(createInitialGameState());
   };
 
   return (
@@ -180,8 +200,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         moveToStage,
         completeStage1,
         answerStage2,
-        moveStage3,
         recordStage3Match,
+        penaltyStage3,
         addStage4Score,
         answerStage5,
         resetGame
@@ -197,9 +217,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 ======================= */
 
 export function useGame() {
-  const context = useContext(GameContext);
-  if (!context) {
-    throw new Error('useGame must be used within GameProvider');
+  const ctx = useContext(GameContext);
+  if (!ctx) {
+    throw new Error('useGame must be used inside GameProvider');
   }
-  return context;
+  return ctx;
 }
