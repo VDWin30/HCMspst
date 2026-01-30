@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useGame } from '@/lib/game-context';
 import { gameData } from '@/lib/game-data';
@@ -13,12 +13,13 @@ interface Piece {
 
 const PIECE_SIZE = 80;
 
+/* ===== LEVEL CONFIG (THEO TỶ LỆ RANDOM) ===== */
 const LEVELS = [
-  { pieces: 6, cols: 3, rows: 2, rate: 5 },        // 5%
-  { pieces: 8, cols: 4, rows: 2, rate: 23.75 },
-  { pieces: 12, cols: 4, rows: 3, rate: 23.75 },
-  { pieces: 14, cols: 7, rows: 2, rate: 23.75 },
-  { pieces: 16, cols: 4, rows: 4, rate: 23.75 },
+  { cols: 3, rows: 2, rate: 5 },        // 6 mảnh – 5%
+  { cols: 4, rows: 2, rate: 23.75 },    // 8 mảnh
+  { cols: 4, rows: 3, rate: 23.75 },    // 12 mảnh
+  { cols: 7, rows: 2, rate: 23.75 },    // 14 mảnh
+  { cols: 4, rows: 4, rate: 23.75 },    // 16 mảnh
 ];
 
 const pickLevel = () => {
@@ -40,11 +41,8 @@ export function Stage1() {
   const [imageUrl, setImageUrl] = useState('');
   const [completed, setCompleted] = useState(false);
 
-  useEffect(() => {
-    initPuzzle();
-  }, []);
-
-  const initPuzzle = () => {
+  /* ===== INIT PUZZLE ===== */
+  const initPuzzle = useCallback(() => {
     const puzzle =
       gameData.stage1[Math.floor(Math.random() * gameData.stage1.length)];
     const level = pickLevel();
@@ -56,10 +54,11 @@ export function Stage1() {
     setCompleted(false);
 
     const temp: Piece[] = [];
+
     for (let r = 0; r < level.rows; r++) {
       for (let c = 0; c < level.cols; c++) {
         temp.push({
-          id: `${r}-${c}-${Math.random()}`,
+          id: `${r}-${c}-${crypto.randomUUID()}`,
           col: c,
           row: r,
         });
@@ -67,27 +66,33 @@ export function Stage1() {
     }
 
     setPieces(temp.sort(() => Math.random() - 0.5));
-  };
+  }, []);
 
+  useEffect(() => {
+    initPuzzle();
+  }, [initPuzzle]);
+
+  /* ===== DRAG ===== */
   const onDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.setData('pieceId', id);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
   const onDrop = (e: React.DragEvent, col: number, row: number) => {
     e.preventDefault();
     const id = e.dataTransfer.getData('pieceId');
-    const piece = pieces.find((p) => p.id === id);
+    const piece = pieces.find(p => p.id === id);
     if (!piece) return;
 
     if (piece.col === col && piece.row === row) {
-      setPlaced((prev) => {
+      setPlaced(prev => {
         const next = new Set(prev);
         next.add(id);
 
         if (next.size === pieces.length) {
           setTimeout(() => {
             setCompleted(true);
-            completeStage1(); // ✅ +100 điểm (chuẩn GameContext)
+            completeStage1(); // +100 điểm
           }, 300);
         }
 
@@ -119,6 +124,7 @@ export function Stage1() {
     );
   }
 
+  /* ===== GAME UI ===== */
   return (
     <div className="flex gap-6">
       {/* BOARD */}
@@ -128,14 +134,14 @@ export function Stage1() {
       >
         {Array.from({ length: rows }).map((_, r) =>
           Array.from({ length: cols }).map((_, c) => {
-            const piece = pieces.find((p) => p.col === c && p.row === r);
+            const piece = pieces.find(p => p.col === c && p.row === r);
             const ok = piece && placed.has(piece.id);
 
             return (
               <div
                 key={`${r}-${c}`}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => onDrop(e, c, r)}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => onDrop(e, c, r)}
                 className="border"
                 style={{
                   width: PIECE_SIZE,
@@ -152,11 +158,11 @@ export function Stage1() {
 
       {/* PIECES */}
       <div className="grid grid-cols-2 gap-2">
-        {pieces.map((p) => (
+        {pieces.map(p => (
           <div
             key={p.id}
             draggable={!placed.has(p.id)}
-            onDragStart={(e) => onDragStart(e, p.id)}
+            onDragStart={e => onDragStart(e, p.id)}
             className="border cursor-grab"
             style={{
               width: PIECE_SIZE,
