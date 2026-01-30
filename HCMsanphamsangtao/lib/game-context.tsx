@@ -8,12 +8,16 @@ type GameState = {
   currentStage: number;
   score: number;
 
+  // Stage 1
+  stage1Completed: boolean;
+
   // Stage 2
   stage2Answers: Record<string, number>;
 
   // Stage 3
   stage3Score: number;
   stage3Moves: number;
+  stage3Completed: boolean;
 
   // Stage 5
   stage5Answers: Record<string, boolean>;
@@ -61,10 +65,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     currentStage: 0,
     score: 0,
 
+    stage1Completed: false,
+
     stage2Answers: {},
 
     stage3Score: 0,
     stage3Moves: 0,
+    stage3Completed: false,
 
     stage5Answers: {},
   });
@@ -81,7 +88,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   /* ================= STAGE 1 ================= */
   const completeStage1 = () => {
-    addScore(100);
+    setGameState(p => {
+      if (p.stage1Completed) return p;
+
+      return {
+        ...p,
+        stage1Completed: true,
+        score: p.score + 100,
+      };
+    });
   };
 
   /* ================= STAGE 2 ================= */
@@ -101,16 +116,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   /* ================= STAGE 3 ================= */
 
-  // Init Stage 3 (500 điểm gốc)
+  // Init Stage 3 (chỉ reset nếu chưa chơi)
   const startStage3 = () => {
     setGameState(p => ({
       ...p,
       stage3Score: 500,
       stage3Moves: 0,
+      stage3Completed: false,
     }));
   };
 
-  // Mỗi lượt lật (sai hay đúng đều tính move)
+  // Mỗi lượt lật: trừ điểm stage 3
   const recordStage3Move = () => {
     setGameState(p => ({
       ...p,
@@ -119,12 +135,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  // Hoàn thành Stage 3 → cộng điểm 1 lần
+  // Hoàn thành Stage 3 → cộng điểm đúng 1 lần
   const completeStage3 = () => {
-    setGameState(p => ({
-      ...p,
-      score: p.score + p.stage3Score,
-    }));
+    setGameState(p => {
+      if (p.stage3Completed) return p;
+
+      return {
+        ...p,
+        stage3Completed: true,
+        score: p.score + p.stage3Score,
+      };
+    });
   };
 
   /* ================= STAGE 4 ================= */
@@ -156,9 +177,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setGameState({
       currentStage: 0,
       score: 0,
+
+      stage1Completed: false,
+
       stage2Answers: {},
+
       stage3Score: 0,
       stage3Moves: 0,
+      stage3Completed: false,
+
       stage5Answers: {},
     });
   };
