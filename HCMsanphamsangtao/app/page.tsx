@@ -63,6 +63,7 @@ function GameContent() {
               {getTotalScore()} điểm
             </p>
           </div>
+
           <button
             onClick={handleHome}
             className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-white"
@@ -93,6 +94,7 @@ function GameContent() {
   );
 }
 
+/* 🚨 QUAN TRỌNG: PHẢI BỌC PROVIDER Ở ĐÂY */
 export default function Page() {
   return (
     <GameProvider>
