@@ -218,12 +218,12 @@ export const gameData: GameData = {
   stage3: [
     {
       id: 'mem1',
-      imageUrl: 'https://nads.1cdn.vn/2024/06/28/W_than-thien-copyrs.jpg',
+      imageUrl: 'https://hcmue.edu.vn/images/PhongBan/CTCT/MY_CONGTACGIADUCTUTUONG/2024/THANG6/4.HCM/1-chnh.png',
       title: 'Chân dung lịch sử 1'
     },
     {
       id: 'mem2',
-      imageUrl: 'https://vcdn1-giadinh.vnecdn.net/2016/03/29/Image-ExtractWord-2-Out-6620-1459219034.jpeg?w=1200&h=0&q=100&dpr=1&fit=crop&s=BtPfsZCAZZQDlIHFR9sNLw',
+      imageUrl: 'https://inkythuatso.com/uploads/thumbnails/800/2023/03/hinh-anh-bac-ho-ra-di-tim-duong-cuu-nuoc-inkythuatso-04-10-49-49.jpg',
       title: 'Di tích 1'
     },
     {
