@@ -228,22 +228,22 @@ export const gameData: GameData = {
     },
     {
       id: 'mem3',
-      imageUrl: 'https://vcdn1-giadinh.vnecdn.net/2016/03/29/Image-942802835-ExtractWord-7-6460-7566-1459219025.png?w=680&h=0&q=100&dpr=2&fit=crop&s=7JeeTLl0YiwoZ8wi3TfuZw',
+      imageUrl: 'https://luatduonggia.vn/wp-content/uploads/2024/07/nguon-goc-co-so-va-qua-trinh-hinh-thanh-tu-tuong-ho-chi-minh.png',
       title: 'Cách mạng 1'
     },
     {
       id: 'mem4',
-      imageUrl: 'https://vcdn1-giadinh.vnecdn.net/2016/03/29/Image-322193178-ExtractWord-3-5762-8378-1459219022.png?w=680&h=0&q=100&dpr=2&fit=crop&s=rzDSxRtho3FQqKuMitCiXA',
+      imageUrl: 'https://images.hcmcpv.org.vn/res/news/2024/01/21-01-2024-nhan-thuc-sau-sac-tu-tuong-ho-chi-minh-cung-la-mot-cach-phong-ngua-su-suy-thoai--1CCFB382.jpg',
       title: 'Chân dung lịch sử 2'
     },
     {
       id: 'mem5',
-      imageUrl: 'https://vcdn1-giadinh.vnecdn.net/2016/03/29/Image-ExtractWord-6-Out-6941-1459219025.png?w=680&h=0&q=100&dpr=2&fit=crop&s=0j2O5JYduFp_nQOH4ODrTA',
+      imageUrl: 'https://s-aicmscdn.vietnamhoinhap.vn/vnhn-media/24/1/29/tc_65b7bdb6291bb.jpg',
       title: 'Di tích 2'
     },
     {
       id: 'mem6',
-      imageUrl: 'https://media-cdn-v2.laodong.vn/storage/newsportal/2024/8/22/1383302/Canhdep_Vietnam-1.jpg',
+      imageUrl: 'https://www.tapchicongsan.org.vn/documents/20182/387375801/Bo+truong+Phan+Van+Giang+kiem+tra+chien+si+2.jpg/bafc9e2e-5bfb-487f-a092-bade5decceb4?t=1720336171135',
       title: 'Cách mạng 2'
     }
   ],
