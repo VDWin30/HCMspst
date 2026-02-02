@@ -57,9 +57,21 @@ export const gameData: GameData = {
       title: 'Di tích lịch sử',
       description: 'Ghép tranh về di tích lịch sử Việt Nam'
     },
-    {
+     {
       id: 'puzzle3',
+      image: 'https://qltt.vn/stores/news_dataimages/khuyenntm/042024/19/08/4307_Ynh_1.jpg?rt=20240419084308',
+      title: 'ảnh phát triển đất nước',
+      description: 'Ghép tranh để hoàn thành bức ảnh'
+    },
+    {
+      id: 'puzzle4',
       image: 'https://media.la34.com.vn/upload/image/202508/original/40cb63687e0f70fab7f5c35967def143.jpg',
+      title: 'Cách mạng Việt Nam',
+      description: 'Ghép tranh về cách mạng tháng 8 năm 1945'
+    },
+     {
+      id: 'puzzle5',
+      image: 'https://www.tapchicongsan.org.vn/image/journal/article?img_id=101568841&t=1618467058136',
       title: 'Cách mạng Việt Nam',
       description: 'Ghép tranh về cách mạng tháng 8 năm 1945'
     }
